@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { 
   collection, 
   query, 
@@ -19,14 +19,14 @@ import { ProductCard } from '@/components/marketplace/product-card';
 import { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Filter, Search, X, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import { Filter, Search, X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
 const PRODUCTS_PER_PAGE = 8;
 
-export default function ProductsPage() {
+function ProductsContent() {
   const db = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -45,19 +45,16 @@ export default function ProductsPage() {
 
     setIsLoading(true);
     try {
-      // Create standard query
       let q = query(
         collection(db, 'products'),
         orderBy('createdAt', 'desc'),
         limit(PRODUCTS_PER_PAGE)
       );
 
-      // Apply category filter if exists
       if (categoryFilter) {
         q = query(q, where('category', '==', categoryFilter));
       }
 
-      // Handle pagination
       if (!isInitial && lastDoc) {
         q = query(q, startAfter(lastDoc));
       }
@@ -87,7 +84,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts(true);
-  }, [categoryFilter]);
+  }, [categoryFilter, fetchProducts]);
 
   const lastProductRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -109,90 +106,101 @@ export default function ProductsPage() {
   };
 
   return (
+    <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
+      <div className="flex flex-col gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
+            <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight">The Marketplace</h1>
+            <p className="text-muted-foreground text-sm max-w-lg">
+              Curated beauty selections from Nigeria's most trusted vendors.
+            </p>
+            {categoryFilter && (
+              <Badge className="bg-primary text-white py-1.5 px-4 rounded-full flex items-center gap-2 font-bold text-xs">
+                {categoryFilter}
+                <X className="h-3 w-3 cursor-pointer" onClick={removeFilter} />
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="rounded-full gap-2 h-11 px-6 font-bold text-xs bg-secondary/50">
+              <Filter className="h-4 w-4" /> Filter
+            </Button>
+            <Button variant="outline" className="rounded-full gap-2 h-11 px-6 font-bold text-xs bg-secondary/50">
+              <SlidersHorizontal className="h-4 w-4" /> Sort
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search products..." 
+            className="pl-12 h-11 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+        {products.map((product, index) => {
+          const isLast = products.length === index + 1;
+          return (
+            <div key={product.id} ref={isLast ? lastProductRef : null}>
+              <ProductCard product={product} />
+            </div>
+          );
+        })}
+
+        {isLoading && [...Array(4)].map((_, i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="aspect-square rounded-[2rem] w-full" />
+            <div className="space-y-2 px-2">
+              <Skeleton className="h-3 w-1/4" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-6 w-1/2 pt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!isLoading && products.length === 0 && (
+        <div className="py-24 text-center text-muted-foreground bg-secondary/10 rounded-[3rem] border-2 border-dashed">
+          <p className="text-xl font-headline italic">No products found in this category.</p>
+          <Button variant="link" onClick={removeFilter} className="mt-2 font-bold text-primary">Clear filters</Button>
+        </div>
+      )}
+
+      {isLoading && products.length > 0 && (
+        <div className="flex justify-center mt-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      )}
+
+      {!hasMore && products.length > 0 && (
+        <div className="mt-16 text-center py-8 border-t border-secondary">
+          <p className="text-muted-foreground font-headline text-lg italic">
+            You've explored the entire collection.
+          </p>
+        </div>
+      )}
+    </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
     <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
-        <div className="flex flex-col gap-6 mb-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-3">
-              <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight">The Marketplace</h1>
-              <p className="text-muted-foreground text-sm max-w-lg">
-                Curated beauty selections from Nigeria's most trusted vendors.
-              </p>
-              {categoryFilter && (
-                <Badge className="bg-primary text-white py-1.5 px-4 rounded-full flex items-center gap-2 font-bold text-xs">
-                  {categoryFilter}
-                  <X className="h-3 w-3 cursor-pointer" onClick={removeFilter} />
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" className="rounded-full gap-2 h-11 px-6 font-bold text-xs bg-secondary/50">
-                <Filter className="h-4 w-4" /> Filter
-              </Button>
-              <Button variant="outline" className="rounded-full gap-2 h-11 px-6 font-bold text-xs bg-secondary/50">
-                <SlidersHorizontal className="h-4 w-4" /> Sort
-              </Button>
-            </div>
-          </div>
-
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search products..." 
-              className="pl-12 h-11 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <Suspense fallback={
+        <div className="flex-1 container mx-auto px-4 py-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="font-headline italic text-muted-foreground">Opening the marketplace...</p>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {products.map((product, index) => {
-            const isLast = products.length === index + 1;
-            return (
-              <div key={product.id} ref={isLast ? lastProductRef : null}>
-                <ProductCard product={product} />
-              </div>
-            );
-          })}
-
-          {isLoading && [...Array(4)].map((_, i) => (
-            <div key={i} className="space-y-4">
-              <Skeleton className="aspect-square rounded-[2rem] w-full" />
-              <div className="space-y-2 px-2">
-                <Skeleton className="h-3 w-1/4" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-6 w-1/2 pt-2" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {!isLoading && products.length === 0 && (
-          <div className="py-24 text-center text-muted-foreground bg-secondary/10 rounded-[3rem] border-2 border-dashed">
-            <p className="text-xl font-headline italic">No products found in this category.</p>
-            <Button variant="link" onClick={removeFilter} className="mt-2 font-bold text-primary">Clear filters</Button>
-          </div>
-        )}
-
-        {isLoading && products.length > 0 && (
-          <div className="flex justify-center mt-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        )}
-
-        {!hasMore && products.length > 0 && (
-          <div className="mt-16 text-center py-8 border-t border-secondary">
-            <p className="text-muted-foreground font-headline text-lg italic">
-              You've explored the entire collection.
-            </p>
-          </div>
-        )}
-      </main>
-
+      }>
+        <ProductsContent />
+      </Suspense>
       <Footer />
     </div>
   );

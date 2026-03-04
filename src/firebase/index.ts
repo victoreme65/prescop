@@ -9,9 +9,14 @@ import { getFirestore } from 'firebase/firestore'
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
     // During SSR/Build, we return a safe structure but avoid calling initializeApp() 
-    // without arguments if we can't guarantee App Hosting environment variables are set.
-    // This prevents the 'app/no-options' crash.
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    // without arguments to prevent the 'app/no-options' crash.
+    // We only initialize if a hardcoded config exists, prioritizing it for the build.
+    let app: FirebaseApp;
+    if (getApps().length) {
+      app = getApp();
+    } else {
+      app = initializeApp(firebaseConfig);
+    }
     return getSdks(app);
   }
 
@@ -21,7 +26,7 @@ export function initializeFirebase() {
       // Attempt automatic initialization (preferred for Firebase App Hosting)
       firebaseApp = initializeApp();
     } catch (e) {
-      // Fallback to hardcoded config for development or other environments
+      // Fallback to hardcoded config
       firebaseApp = initializeApp(firebaseConfig);
     }
     return getSdks(firebaseApp);

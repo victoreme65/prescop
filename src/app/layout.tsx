@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,7 +7,6 @@ import { FirebaseClientProvider } from "@/firebase/client-provider";
 export const metadata: Metadata = {
   title: 'Prescop | Premium Beauty Marketplace Nigeria',
   description: 'Shop curated luxury skincare, makeup, and fragrances from trusted vendors. The ultimate destination for modern African beauty.',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
   openGraph: {
     title: 'Prescop | Premier Beauty Marketplace Nigeria',
     description: 'Shop luxury skincare, makeup, and fragrances from trusted vendors.',
@@ -16,6 +15,12 @@ export const metadata: Metadata = {
     locale: 'en_NG',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
