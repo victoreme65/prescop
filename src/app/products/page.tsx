@@ -29,6 +29,7 @@ export default function ProductsPage() {
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const observer = useRef<IntersectionObserver | null>(null);
 
   const fetchProducts = useCallback(async (isInitial = false) => {
@@ -59,7 +60,8 @@ export default function ProductsPage() {
         setProducts(prev => [...prev, ...newProducts]);
       }
 
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
+      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+      setLastDoc(lastVisible || null);
       setHasMore(snapshot.docs.length === PRODUCTS_PER_PAGE);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -68,6 +70,7 @@ export default function ProductsPage() {
     }
   }, [db, lastDoc, isLoading, hasMore]);
 
+  // Initial fetch
   useEffect(() => {
     fetchProducts(true);
   }, []);
@@ -86,37 +89,41 @@ export default function ProductsPage() {
   }, [isLoading, hasMore, fetchProducts]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20">
-        <div className="flex flex-col gap-8 mb-12 md:mb-16">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
+        <div className="flex flex-col gap-6 md:gap-10 mb-10 md:mb-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold mb-3 tracking-tight">Discover Beauty</h1>
-              <p className="text-muted-foreground text-base md:text-lg lg:text-xl">Browse our full collection of verified premium products.</p>
+            <div className="space-y-2">
+              <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Shop Collection</h1>
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl">
+                Explore our full range of premium beauty essentials, curated for quality and authenticity.
+              </p>
             </div>
             
-            <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-6 font-bold">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs sm:text-sm">
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-6 font-bold">
-                <SlidersHorizontal className="h-4 w-4" /> Sort By
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs sm:text-sm">
+                <SlidersHorizontal className="h-4 w-4" /> Sort
               </Button>
             </div>
           </div>
 
-          <div className="relative w-full md:max-w-md lg:max-w-xl group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <div className="relative w-full md:max-w-md group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
-              placeholder="Search products by name or category..." 
-              className="pl-12 h-14 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-base shadow-sm"
+              placeholder="Search products..." 
+              className="pl-11 h-12 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-sm sm:text-base shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
           {products.length > 0 ? (
             products.map((product, index) => {
               if (products.length === index + 1) {
@@ -130,30 +137,43 @@ export default function ProductsPage() {
               }
             })
           ) : !isLoading && (
-            <div className="col-span-full py-32 text-center text-muted-foreground bg-secondary/10 rounded-[2rem] border-2 border-dashed">
-              <p className="text-xl md:text-2xl font-headline italic">No products found. Stay tuned for new arrivals!</p>
+            <div className="col-span-full py-20 text-center text-muted-foreground bg-secondary/10 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center p-6">
+              <Search className="h-10 w-10 mb-4 opacity-20" />
+              <p className="text-lg md:text-xl font-headline italic">No products found. Please check back later.</p>
             </div>
           )}
 
           {isLoading && [...Array(4)].map((_, i) => (
             <div key={i} className="space-y-4">
-              <Skeleton className="aspect-square rounded-3xl w-full" />
+              <Skeleton className="aspect-square rounded-2xl w-full" />
               <div className="space-y-3 px-1">
                 <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-7 w-3/4" />
+                <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-full" />
                 <div className="flex justify-between items-center pt-2">
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-10 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-9 w-20 rounded-full" />
                 </div>
               </div>
             </div>
           ))}
         </div>
 
+        {isLoading && products.length > 0 && (
+          <div className="flex justify-center mt-12">
+            <div className="flex items-center gap-2 text-primary font-bold animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-current" />
+              <div className="h-2 w-2 rounded-full bg-current" />
+              <div className="h-2 w-2 rounded-full bg-current" />
+            </div>
+          </div>
+        )}
+
         {!hasMore && products.length > 0 && (
-          <div className="mt-20 text-center py-16 border-t border-secondary/50">
-            <p className="text-muted-foreground font-headline text-lg md:text-xl italic">You've reached the end of our current collection. Follow us for updates!</p>
+          <div className="mt-16 text-center py-12 border-t border-secondary/50">
+            <p className="text-muted-foreground font-headline text-base md:text-lg italic">
+              You've reached the end of the collection.
+            </p>
           </div>
         )}
       </main>

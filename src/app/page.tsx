@@ -79,7 +79,7 @@ export default function Home() {
       
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-[500px] md:h-[85vh] w-full flex items-center overflow-hidden py-16 md:py-0">
+        <section className="relative min-h-[500px] md:h-[85vh] w-full flex items-center overflow-hidden py-12 md:py-0">
           <div className="absolute inset-0 z-0">
             <Image
               src="https://picsum.photos/seed/prescop-hero-v2/1600/900"
@@ -94,21 +94,21 @@ export default function Home() {
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-2xl animate-in fade-in slide-in-from-left-4 duration-1000">
-              <Badge variant="outline" className="mb-6 border-primary text-primary px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide uppercase">
+              <Badge variant="outline" className="mb-4 md:mb-6 border-primary text-primary px-3 sm:px-4 py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide uppercase">
                 New Collection 2024
               </Badge>
-              <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] mb-6 tracking-tighter">
+              <h1 className="font-headline text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] mb-4 md:mb-6 tracking-tighter">
                 Discover Your <br />
                 <span className="text-primary italic">Timeless Beauty</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 font-body leading-relaxed max-w-lg">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-8 md:mb-10 font-body leading-relaxed max-w-lg">
                 The ultimate destination for premium skincare, makeup, and fragrances. Curated for the modern African aesthetic.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" asChild className="rounded-full h-14 px-10 bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 text-base font-bold">
-                  <Link href="/products">Shop the Collection</Link>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button size="lg" asChild className="rounded-full h-12 sm:h-14 px-8 sm:px-10 bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 text-sm sm:text-base font-bold">
+                  <Link href="/products">Shop Collection</Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="rounded-full h-14 px-10 border-primary/20 hover:bg-primary/5 text-base font-bold bg-background/50 backdrop-blur-sm">
+                <Button size="lg" variant="outline" asChild className="rounded-full h-12 sm:h-14 px-8 sm:px-10 border-primary/20 hover:bg-primary/5 text-sm sm:text-base font-bold bg-background/50 backdrop-blur-sm">
                   <Link href="/seller/apply">Start Selling</Link>
                 </Button>
               </div>
@@ -117,34 +117,34 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="py-16 md:py-24 bg-muted/30">
+        <section className="py-12 md:py-24 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
-              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="h-7 w-7 md:h-8 md:w-8 text-primary" />
+              <div className="flex flex-col items-center text-center gap-3 sm:gap-4 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md">
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg md:text-xl mb-2">Verified Sellers</h3>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">Every product is authenticated and sourced from certified beauty vendors.</p>
+                  <h3 className="font-headline font-bold text-lg sm:text-xl mb-1 sm:mb-2">Verified Sellers</h3>
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed">Every product is authenticated and sourced from certified beauty vendors.</p>
                 </div>
               </div>
-              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Truck className="h-7 w-7 md:h-8 md:w-8 text-primary" />
+              <div className="flex flex-col items-center text-center gap-3 sm:gap-4 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md">
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Truck className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg md:text-xl mb-2">Nationwide Delivery</h3>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">Efficient logistics network covering all 36 states in Nigeria within 3-5 days.</p>
+                  <h3 className="font-headline font-bold text-lg sm:text-xl mb-1 sm:mb-2">Nationwide Delivery</h3>
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed">Efficient logistics network covering all 36 states in Nigeria within 3-5 days.</p>
                 </div>
               </div>
-              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md hover:-translate-y-1 sm:col-span-2 md:col-span-1 max-w-md mx-auto sm:max-w-none">
-                <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-7 w-7 md:h-8 md:w-8 text-primary" />
+              <div className="flex flex-col items-center text-center gap-3 sm:gap-4 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-background shadow-sm border border-border/50 transition-all hover:shadow-md sm:col-span-2 md:col-span-1 max-w-md mx-auto sm:max-w-none">
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg md:text-xl mb-2">Personalized Curation</h3>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">AI-powered recommendations tailored to your unique skin tone and type.</p>
+                  <h3 className="font-headline font-bold text-lg sm:text-xl mb-1 sm:mb-2">Personalized AI</h3>
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed">AI-powered recommendations tailored to your unique skin tone and type.</p>
                 </div>
               </div>
             </div>
@@ -152,21 +152,21 @@ export default function Home() {
         </section>
 
         {/* Featured Products */}
-        <section className="py-16 md:py-24">
+        <section className="py-12 md:py-24">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-16 gap-4 md:gap-6">
               <div className="max-w-xl">
-                <h2 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">Trending This Week</h2>
-                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">Explore our most sought-after beauty essentials, chosen by the Prescop community.</p>
+                <h2 className="font-headline text-2xl sm:text-3xl md:text-5xl font-bold mb-2 md:mb-4 tracking-tight">Trending Essentials</h2>
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">Explore our most sought-after beauty essentials, chosen by the Prescop community.</p>
               </div>
-              <Button asChild variant="link" className="text-primary font-bold text-base md:text-lg h-auto p-0 group self-start md:self-auto">
+              <Button asChild variant="link" className="text-primary font-bold text-sm sm:text-base md:text-lg h-auto p-0 group self-start">
                 <Link href="/products" className="flex items-center gap-2">
-                  Discover All Products <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  View All <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               {MOCK_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -175,25 +175,25 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-16 md:py-24 bg-primary/5">
+        <section className="py-12 md:py-24 bg-primary/5 overflow-hidden">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold mb-12 md:mb-16 text-center">Loved by Thousands</h2>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-5xl font-bold mb-8 md:mb-16 text-center tracking-tight">Loved by Thousands</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {testimonials.map((t, i) => (
-                <div key={i} className="p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-background shadow-sm border border-primary/10 flex flex-col gap-6">
+                <div key={i} className="p-6 sm:p-8 md:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] bg-background shadow-sm border border-primary/10 flex flex-col gap-4 sm:gap-6">
                   <div className="flex gap-1">
                     {[...Array(t.rating)].map((_, j) => (
-                      <Star key={j} className="h-4 w-4 fill-primary text-primary" />
+                      <Star key={j} className="h-3 w-3 sm:h-4 sm:w-4 fill-primary text-primary" />
                     ))}
                   </div>
-                  <p className="text-base md:text-lg italic text-muted-foreground leading-relaxed">"{t.comment}"</p>
-                  <div className="flex items-center gap-4 mt-auto">
-                    <div className="relative h-12 w-12 rounded-full overflow-hidden border border-primary/20">
+                  <p className="text-sm sm:text-base md:text-lg italic text-muted-foreground leading-relaxed">"{t.comment}"</p>
+                  <div className="flex items-center gap-3 sm:gap-4 mt-auto">
+                    <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border border-primary/20 shrink-0">
                       <Image src={t.image} alt={t.name} fill className="object-cover" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm md:text-base">{t.name}</h4>
-                      <p className="text-xs md:text-sm text-muted-foreground">{t.location}</p>
+                      <h4 className="font-bold text-xs sm:text-sm md:text-base">{t.name}</h4>
+                      <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">{t.location}</p>
                     </div>
                   </div>
                 </div>
@@ -203,21 +203,21 @@ export default function Home() {
         </section>
 
         {/* Newsletter */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto rounded-[2rem] md:rounded-[3rem] bg-primary p-10 md:p-20 text-center text-primary-foreground relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 p-12 opacity-10 hidden md:block">
-                <Send className="h-64 w-64 rotate-12" />
+        <section className="py-12 md:py-24 px-4">
+          <div className="container mx-auto">
+            <div className="max-w-4xl mx-auto rounded-[2rem] md:rounded-[3rem] bg-primary p-8 sm:p-12 md:p-20 text-center text-primary-foreground relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-8 sm:p-12 opacity-10 hidden md:block">
+                <Send className="h-48 w-48 sm:h-64 sm:w-64 rotate-12" />
               </div>
               <div className="relative z-10">
-                <h2 className="font-headline text-3xl sm:text-4xl md:text-6xl font-bold mb-6">Join the Beauty Circle</h2>
-                <p className="text-base md:text-xl opacity-90 mb-10 max-w-xl mx-auto leading-relaxed">
+                <h2 className="font-headline text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">Join the Beauty Circle</h2>
+                <p className="text-sm sm:text-base md:text-xl opacity-90 mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed">
                   Subscribe to get early access to drops, exclusive beauty tips, and special offers.
                 </p>
-                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-md mx-auto">
                   <Input 
                     placeholder="Enter your email" 
-                    className="h-14 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white"
+                    className="h-12 sm:h-14 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -225,13 +225,13 @@ export default function Home() {
                   />
                   <Button 
                     type="submit"
-                    className="h-14 rounded-full px-8 bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
+                    className="h-12 sm:h-14 rounded-full px-6 sm:px-8 bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
                     disabled={isSubscribing}
                   >
                     {isSubscribing ? 'Joining...' : 'Subscribe'}
                   </Button>
                 </form>
-                <p className="mt-6 text-xs md:text-sm opacity-60">No spam, just pure beauty. Unsubscribe anytime.</p>
+                <p className="mt-4 sm:mt-6 text-[10px] sm:text-xs md:text-sm opacity-60">No spam, just pure beauty. Unsubscribe anytime.</p>
               </div>
             </div>
           </div>

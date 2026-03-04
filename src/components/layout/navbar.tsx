@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, LayoutDashboard, LogOut, Package, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, LayoutDashboard, LogOut, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { usePathname } from 'next/navigation';
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
   const cartCount = 2; // Simulated
 
@@ -31,9 +32,9 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close menu on navigation
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsSearchOpen(false);
   }, [pathname]);
 
   return (
@@ -41,11 +42,11 @@ export function Navbar() {
       "sticky top-0 z-50 w-full transition-all duration-300",
       isScrolled 
         ? "border-b bg-background/95 backdrop-blur-md py-1" 
-        : "bg-background py-3 md:py-4"
+        : "bg-background py-2 md:py-4"
     )}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8 lg:gap-12">
-          <Link href="/" className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
+        <div className="flex items-center gap-4 lg:gap-12">
+          <Link href="/" className="font-headline text-xl sm:text-2xl md:text-3xl font-bold text-primary tracking-tight shrink-0">
             PRESCOP
           </Link>
           
@@ -53,11 +54,12 @@ export function Navbar() {
             <Link href="/products?category=Skincare" className="hover:text-primary transition-colors">Skincare</Link>
             <Link href="/products?category=Makeup" className="hover:text-primary transition-colors">Makeup</Link>
             <Link href="/products?category=Fragrance" className="hover:text-primary transition-colors">Fragrance</Link>
-            <Link href="/seller/apply" className="hover:text-primary transition-colors text-accent">Sell on Prescop</Link>
+            <Link href="/seller/apply" className="hover:text-primary transition-colors text-accent">Sell</Link>
           </div>
         </div>
 
-        <div className="hidden md:flex flex-1 max-w-sm mx-8">
+        {/* Desktop Search */}
+        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-4 lg:mx-8">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
@@ -68,11 +70,14 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
           
-          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden h-10 w-10"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+          >
             <Search className="h-5 w-5" />
           </Button>
 
@@ -80,7 +85,7 @@ export function Navbar() {
             <Button variant="ghost" size="icon" className="relative h-10 w-10">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background">
+                <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background">
                   {cartCount}
                 </Badge>
               )}
@@ -95,24 +100,24 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl">
-                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3 cursor-pointer">
                   <Link href="/profile" className="flex items-center gap-3">
                     <User className="h-4 w-4" /> My Profile
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3 cursor-pointer">
                   <Link href="/orders" className="flex items-center gap-3">
                     <ShoppingBag className="h-4 w-4" /> My Orders
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3 cursor-pointer">
                   <Link href="/seller/dashboard" className="flex items-center gap-3">
                     <LayoutDashboard className="h-4 w-4" /> Seller Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive rounded-lg h-10 px-3 focus:bg-destructive/10 focus:text-destructive">
+                <DropdownMenuItem className="text-destructive rounded-lg h-10 px-3 focus:bg-destructive/10 focus:text-destructive cursor-pointer">
                   <LogOut className="h-4 w-4" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -130,6 +135,20 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Search Overlay */}
+      <div className={cn(
+        "absolute inset-x-0 top-full bg-background border-b px-4 py-3 md:hidden transition-all duration-300 overflow-hidden",
+        isSearchOpen ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+      )}>
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search beauty essentials..." 
+            className="pl-10 h-10 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm"
+          />
+        </div>
+      </div>
+
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="fixed inset-0 top-16 z-[49] bg-background/80 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsMenuOpen(false)} />
@@ -137,26 +156,25 @@ export function Navbar() {
 
       {/* Mobile Menu Content */}
       <div className={cn(
-        "fixed inset-x-0 top-16 z-50 lg:hidden bg-background border-b shadow-xl transition-all duration-300 ease-in-out origin-top overflow-hidden",
-        isMenuOpen ? "max-h-[80vh] opacity-100 py-6 px-4" : "max-h-0 opacity-0 py-0 px-4"
+        "fixed inset-x-0 top-16 z-50 lg:hidden bg-background border-b shadow-2xl transition-all duration-300 ease-in-out origin-top overflow-hidden",
+        isMenuOpen ? "max-h-[85vh] opacity-100 py-6 px-4" : "max-h-0 opacity-0 py-0 px-4"
       )}>
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 mb-2">Shop Categories</p>
-            <Link href="/products?category=Skincare" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Skincare</Link>
-            <Link href="/products?category=Makeup" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Makeup</Link>
-            <Link href="/products?category=Fragrance" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Fragrance</Link>
+            <Link href="/products?category=Skincare" className="text-lg font-bold px-3 py-3 rounded-xl hover:bg-secondary transition-colors">Skincare</Link>
+            <Link href="/products?category=Makeup" className="text-lg font-bold px-3 py-3 rounded-xl hover:bg-secondary transition-colors">Makeup</Link>
+            <Link href="/products?category=Fragrance" className="text-lg font-bold px-3 py-3 rounded-xl hover:bg-secondary transition-colors">Fragrance</Link>
           </div>
           
-          <div className="flex flex-col gap-2 pt-4 border-t">
-            <Link href="/seller/apply" className="text-lg font-bold px-3 py-2 rounded-xl text-accent hover:bg-accent/10 transition-colors">Become a Seller</Link>
-            <Link href="/profile" className="flex items-center gap-3 text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">
+          <div className="flex flex-col gap-1 pt-4 border-t">
+            <Link href="/seller/apply" className="text-lg font-bold px-3 py-3 rounded-xl text-accent hover:bg-accent/10 transition-colors">Become a Seller</Link>
+            <Link href="/profile" className="flex items-center gap-3 text-lg font-bold px-3 py-3 rounded-xl hover:bg-secondary transition-colors">
               <User className="h-5 w-5 text-muted-foreground" /> My Profile
             </Link>
-            <div className="flex items-center justify-between px-3 py-2 border rounded-xl mt-4">
-              <span className="text-sm font-medium">Appearance</span>
-              <ThemeToggle />
-            </div>
+            <Link href="/orders" className="flex items-center gap-3 text-lg font-bold px-3 py-3 rounded-xl hover:bg-secondary transition-colors">
+              <Package className="h-5 w-5 text-muted-foreground" /> My Orders
+            </Link>
           </div>
         </div>
       </div>
