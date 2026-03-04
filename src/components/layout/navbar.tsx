@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Search, ShoppingCart, User, Menu, X, LayoutDashboard, LogOut, Package, ShoppingBag } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,24 +14,46 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
   const cartCount = 2; // Simulated
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close menu on navigation
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-headline text-2xl font-bold text-primary tracking-tight">
+    <nav className={cn(
+      "sticky top-0 z-50 w-full transition-all duration-300",
+      isScrolled 
+        ? "border-b bg-background/95 backdrop-blur-md py-1" 
+        : "bg-background py-3 md:py-4"
+    )}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-8 lg:gap-12">
+          <Link href="/" className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
             PRESCOP
           </Link>
           
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+          <div className="hidden lg:flex items-center gap-8 text-sm font-semibold">
             <Link href="/products?category=Skincare" className="hover:text-primary transition-colors">Skincare</Link>
             <Link href="/products?category=Makeup" className="hover:text-primary transition-colors">Makeup</Link>
             <Link href="/products?category=Fragrance" className="hover:text-primary transition-colors">Fragrance</Link>
-            <Link href="/seller/apply" className="hover:text-primary transition-colors text-accent font-semibold">Sell on Prescop</Link>
+            <Link href="/seller/apply" className="hover:text-primary transition-colors text-accent">Sell on Prescop</Link>
           </div>
         </div>
 
@@ -40,56 +61,68 @@ export function Navbar() {
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search products..." 
-              className="pl-10 h-9 rounded-full bg-secondary/50 border-none focus-visible:ring-primary"
+              placeholder="Search items..." 
+              className="pl-10 h-10 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <ThemeToggle />
+        <div className="flex items-center gap-1 sm:gap-3">
+          <div className="hidden sm:flex items-center gap-2">
+            <ThemeToggle />
+          </div>
           
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
             <Search className="h-5 w-5" />
           </Button>
 
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative h-10 w-10">
+              <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-accent">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background">
                   {cartCount}
                 </Badge>
               )}
             </Button>
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full overflow-hidden">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link href="/profile">My Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/orders">My Orders</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/seller/dashboard">Seller Dashboard</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="hidden sm:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full overflow-hidden border border-secondary">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl">
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                  <Link href="/profile" className="flex items-center gap-3">
+                    <User className="h-4 w-4" /> My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                  <Link href="/orders" className="flex items-center gap-3">
+                    <ShoppingBag className="h-4 w-4" /> My Orders
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="rounded-lg h-10 px-3">
+                  <Link href="/seller/dashboard" className="flex items-center gap-3">
+                    <LayoutDashboard className="h-4 w-4" /> Seller Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive rounded-lg h-10 px-3 focus:bg-destructive/10 focus:text-destructive">
+                  <LogOut className="h-4 w-4" /> Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           <Button 
             variant="ghost" 
             size="icon" 
-            className="md:hidden"
+            className="lg:hidden h-10 w-10"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -97,20 +130,36 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="md:hidden border-t bg-background p-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
-          <Link href="/products?category=Skincare" className="text-lg font-medium px-2 py-1">Skincare</Link>
-          <Link href="/products?category=Makeup" className="text-lg font-medium px-2 py-1">Makeup</Link>
-          <Link href="/products?category=Fragrance" className="text-lg font-medium px-2 py-1">Fragrance</Link>
-          <Link href="/seller/apply" className="text-lg font-medium px-2 py-1 text-accent">Sell on Prescop</Link>
-          <div className="pt-2 border-t">
-            <Link href="/profile" className="flex items-center gap-3 px-2 py-3 text-muted-foreground">
-              <User className="h-5 w-5" /> My Profile
+        <div className="fixed inset-0 top-16 z-[49] bg-background/80 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsMenuOpen(false)} />
+      )}
+
+      {/* Mobile Menu Content */}
+      <div className={cn(
+        "fixed inset-x-0 top-16 z-50 lg:hidden bg-background border-b shadow-xl transition-all duration-300 ease-in-out origin-top overflow-hidden",
+        isMenuOpen ? "max-h-[80vh] opacity-100 py-6 px-4" : "max-h-0 opacity-0 py-0 px-4"
+      )}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 mb-2">Shop Categories</p>
+            <Link href="/products?category=Skincare" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Skincare</Link>
+            <Link href="/products?category=Makeup" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Makeup</Link>
+            <Link href="/products?category=Fragrance" className="text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">Fragrance</Link>
+          </div>
+          
+          <div className="flex flex-col gap-2 pt-4 border-t">
+            <Link href="/seller/apply" className="text-lg font-bold px-3 py-2 rounded-xl text-accent hover:bg-accent/10 transition-colors">Become a Seller</Link>
+            <Link href="/profile" className="flex items-center gap-3 text-lg font-bold px-3 py-2 rounded-xl hover:bg-secondary transition-colors">
+              <User className="h-5 w-5 text-muted-foreground" /> My Profile
             </Link>
+            <div className="flex items-center justify-between px-3 py-2 border rounded-xl mt-4">
+              <span className="text-sm font-medium">Appearance</span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 }
