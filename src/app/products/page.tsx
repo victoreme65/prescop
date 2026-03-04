@@ -75,7 +75,7 @@ export default function ProductsPage() {
     fetchProducts(true);
   }, []);
 
-  const lastProductRef = useCallback((node: HTMLDivElement) => {
+  const lastProductRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
 
@@ -93,55 +93,45 @@ export default function ProductsPage() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
-        <div className="flex flex-col gap-6 md:gap-10 mb-10 md:mb-16">
+        <div className="flex flex-col gap-6 md:gap-10 mb-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2">
+            <div className="space-y-2 text-center md:text-left">
               <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Shop Collection</h1>
               <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl">
-                Explore our full range of premium beauty essentials, curated for quality and authenticity.
+                Explore our full range of premium beauty essentials.
               </p>
             </div>
             
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs sm:text-sm">
+            <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs">
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs sm:text-sm">
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs">
                 <SlidersHorizontal className="h-4 w-4" /> Sort
               </Button>
             </div>
           </div>
 
-          <div className="relative w-full md:max-w-md group">
+          <div className="relative w-full md:max-w-md group mx-auto md:mx-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Search products..." 
-              className="pl-11 h-12 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-sm sm:text-base shadow-sm"
+              className="pl-11 h-12 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-          {products.length > 0 ? (
-            products.map((product, index) => {
-              if (products.length === index + 1) {
-                return (
-                  <div ref={lastProductRef} key={product.id}>
-                    <ProductCard product={product} />
-                  </div>
-                );
-              } else {
-                return <ProductCard key={product.id} product={product} />;
-              }
-            })
-          ) : !isLoading && (
-            <div className="col-span-full py-20 text-center text-muted-foreground bg-secondary/10 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center p-6">
-              <Search className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg md:text-xl font-headline italic">No products found. Please check back later.</p>
-            </div>
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+          {products.map((product, index) => {
+            const isLast = products.length === index + 1;
+            return (
+              <div key={product.id} ref={isLast ? lastProductRef : null}>
+                <ProductCard product={product} />
+              </div>
+            );
+          })}
 
           {isLoading && [...Array(4)].map((_, i) => (
             <div key={i} className="space-y-4">
@@ -149,7 +139,6 @@ export default function ProductsPage() {
               <div className="space-y-3 px-1">
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full" />
                 <div className="flex justify-between items-center pt-2">
                   <Skeleton className="h-6 w-16" />
                   <Skeleton className="h-9 w-20 rounded-full" />
@@ -159,19 +148,24 @@ export default function ProductsPage() {
           ))}
         </div>
 
+        {!isLoading && products.length === 0 && (
+          <div className="py-20 text-center text-muted-foreground bg-secondary/10 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center p-6">
+            <Search className="h-10 w-10 mb-4 opacity-20" />
+            <p className="text-lg md:text-xl font-headline italic">No products found. Please check back later.</p>
+          </div>
+        )}
+
         {isLoading && products.length > 0 && (
           <div className="flex justify-center mt-12">
-            <div className="flex items-center gap-2 text-primary font-bold animate-pulse">
-              <div className="h-2 w-2 rounded-full bg-current" />
-              <div className="h-2 w-2 rounded-full bg-current" />
-              <div className="h-2 w-2 rounded-full bg-current" />
+            <div className="flex items-center gap-2 text-primary animate-pulse font-bold">
+              <span>Loading more...</span>
             </div>
           </div>
         )}
 
         {!hasMore && products.length > 0 && (
           <div className="mt-16 text-center py-12 border-t border-secondary/50">
-            <p className="text-muted-foreground font-headline text-base md:text-lg italic">
+            <p className="text-muted-foreground font-headline text-base italic">
               You've reached the end of the collection.
             </p>
           </div>

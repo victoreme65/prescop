@@ -44,9 +44,9 @@ export function Navbar() {
         ? "border-b bg-background/95 backdrop-blur-md py-1" 
         : "bg-background py-2 md:py-4"
     )}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4 lg:gap-12">
-          <Link href="/" className="font-headline text-xl sm:text-2xl md:text-3xl font-bold text-primary tracking-tight shrink-0">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 lg:gap-12 shrink-0">
+          <Link href="/" className="font-headline text-xl sm:text-2xl md:text-3xl font-bold text-primary tracking-tight">
             PRESCOP
           </Link>
           
@@ -59,7 +59,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop Search */}
-        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-4 lg:mx-8">
+        <div className="hidden md:flex flex-1 max-w-sm mx-4">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
@@ -69,23 +69,23 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <ThemeToggle />
           
           <Button 
             variant="ghost" 
             size="icon" 
-            className="md:hidden h-10 w-10"
+            className="md:hidden h-9 w-9"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
           >
             <Search className="h-5 w-5" />
           </Button>
 
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative h-10 w-10">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background">
+                <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background text-white">
                   {cartCount}
                 </Badge>
               )}
@@ -127,7 +127,7 @@ export function Navbar() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="lg:hidden h-10 w-10"
+            className="lg:hidden h-9 w-9"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -149,15 +149,10 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 top-16 z-[49] bg-background/80 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsMenuOpen(false)} />
-      )}
-
       {/* Mobile Menu Content */}
       <div className={cn(
         "fixed inset-x-0 top-16 z-50 lg:hidden bg-background border-b shadow-2xl transition-all duration-300 ease-in-out origin-top overflow-hidden",
-        isMenuOpen ? "max-h-[85vh] opacity-100 py-6 px-4" : "max-h-0 opacity-0 py-0 px-4"
+        isMenuOpen ? "h-[calc(100vh-4rem)] opacity-100 py-6 px-4" : "h-0 opacity-0 py-0 px-4"
       )}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-1">
