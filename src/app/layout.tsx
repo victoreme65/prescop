@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export const metadata: Metadata = {
-  title: 'Prescop | Premier Beauty Marketplace Nigeria',
+  title: 'Prescop | Premium Beauty Marketplace Nigeria',
   description: 'Shop curated luxury skincare, makeup, and fragrances from trusted vendors. The ultimate destination for modern African beauty.',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
   openGraph: {

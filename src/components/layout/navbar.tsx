@@ -45,15 +45,15 @@ export function Navbar() {
     )}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 h-14 md:h-16">
         <div className="flex items-center gap-4 lg:gap-12">
-          <Link href="/" className="font-headline text-2xl md:text-4xl font-bold text-primary tracking-tight">
+          <Link href="/" className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
             PRESCOP
           </Link>
           
-          <div className="hidden lg:flex items-center gap-10 text-sm font-bold uppercase tracking-widest">
+          <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.2em]">
             <Link href="/products" className="hover:text-primary transition-colors">Shop All</Link>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 hover:text-primary transition-colors outline-none">
-                Categories <ChevronDown className="h-4 w-4" />
+                Categories <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="rounded-2xl p-2 w-56 shadow-2xl border-secondary">
                 <DropdownMenuItem asChild><Link href="/products?category=Skincare">Skincare</Link></DropdownMenuItem>
@@ -61,7 +61,7 @@ export function Navbar() {
                 <DropdownMenuItem asChild><Link href="/products?category=Fragrance">Fragrance</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href="/seller/apply" className="text-accent hover:opacity-80 transition-opacity">Become Seller</Link>
+            <Link href="/seller/apply" className="text-primary hover:opacity-80 transition-opacity">Become Seller</Link>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export function Navbar() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search beauty..." 
-              className="pl-12 h-11 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm font-medium"
+              className="pl-12 h-11 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-xs font-medium"
             />
           </div>
 
@@ -81,10 +81,10 @@ export function Navbar() {
           </Button>
 
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full bg-secondary/20 border border-transparent hover:border-primary/20">
+            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full bg-secondary/20">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background text-white">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white font-bold ring-2 ring-background">
                   {cartCount}
                 </Badge>
               )}
@@ -122,18 +122,18 @@ export function Navbar() {
       )}>
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search items..." className="pl-12 h-12 rounded-full bg-secondary/40 border-none text-sm font-medium" />
+          <Input placeholder="Search items..." className="pl-12 h-11 rounded-full bg-secondary/40 border-none text-xs font-medium" />
         </div>
       </div>
 
       {/* Mobile Drawer */}
       <div className={cn(
-        "fixed inset-x-0 top-[60px] z-50 lg:hidden bg-background border-b shadow-2xl transition-all duration-500 origin-top overflow-hidden",
-        isMenuOpen ? "h-[calc(100vh-60px)] opacity-100 py-10 px-8" : "h-0 opacity-0"
+        "fixed inset-0 z-50 lg:hidden bg-background/95 backdrop-blur-md transition-all duration-500 origin-top overflow-hidden pt-20 px-8",
+        isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}>
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-8">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-2">Explore Marketplace</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-2">Marketplace</p>
             <Link href="/products" className="text-4xl font-bold font-headline">Shop All</Link>
             <Link href="/products?category=Skincare" className="text-3xl font-bold font-headline">Skincare</Link>
             <Link href="/products?category=Makeup" className="text-3xl font-bold font-headline">Makeup</Link>
@@ -141,13 +141,16 @@ export function Navbar() {
           </div>
           
           <div className="flex flex-col gap-8 pt-10 border-t">
-            <Link href="/seller/apply" className="text-3xl font-bold font-headline text-accent">Become a Seller</Link>
+            <Link href="/seller/apply" className="text-3xl font-bold font-headline text-primary">Become a Seller</Link>
             <div className="flex gap-6 mt-4">
-              <Link href="/profile" className="flex items-center gap-3 text-xl font-bold"><User className="h-6 w-6" /> Profile</Link>
-              <Link href="/seller/dashboard" className="flex items-center gap-3 text-xl font-bold"><LayoutDashboard className="h-6 w-6" /> Panel</Link>
+              <Link href="/profile" className="flex items-center gap-3 text-lg font-bold"><User className="h-5 w-5" /> Account</Link>
+              <Link href="/seller/dashboard" className="flex items-center gap-3 text-lg font-bold"><LayoutDashboard className="h-5 w-5" /> Dashboard</Link>
             </div>
           </div>
         </div>
+        <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-12 w-12" onClick={() => setIsMenuOpen(false)}>
+          <X className="h-8 w-8" />
+        </Button>
       </div>
     </nav>
   );

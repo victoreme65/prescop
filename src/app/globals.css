@@ -10,7 +10,7 @@
     --card-foreground: 345 25% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 345 25% 12%;
-    --primary: 345 55% 55%;
+    --primary: 345 55% 45%;
     --primary-foreground: 345 10% 100%;
     --secondary: 30 30% 92%;
     --secondary-foreground: 345 30% 30%;
@@ -22,7 +22,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 345 15% 88%;
     --input: 345 15% 88%;
-    --ring: 345 55% 55%;
+    --ring: 345 55% 45%;
     --radius: 1.5rem;
   }
 
@@ -57,7 +57,7 @@
     @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tight;
+    @apply font-headline tracking-tight leading-tight;
   }
 }
 
