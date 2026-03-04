@@ -4,8 +4,26 @@
     {
       "id": "hero-skincare",
       "description": "Elegant skincare products layout",
-      "imageUrl": "https://picsum.photos/seed/prescop-hero/1200/600",
+      "imageUrl": "https://picsum.photos/seed/prescop-hero/1600/900",
       "imageHint": "skincare beauty"
+    },
+    {
+      "id": "testi-avatar-1",
+      "description": "Customer avatar 1",
+      "imageUrl": "https://picsum.photos/seed/testi1/100/100",
+      "imageHint": "woman face"
+    },
+    {
+      "id": "testi-avatar-2",
+      "description": "Customer avatar 2",
+      "imageUrl": "https://picsum.photos/seed/testi2/100/100",
+      "imageHint": "man face"
+    },
+    {
+      "id": "testi-avatar-3",
+      "description": "Customer avatar 3",
+      "imageUrl": "https://picsum.photos/seed/testi3/100/100",
+      "imageHint": "woman portrait"
     },
     {
       "id": "product-serum",
@@ -24,18 +42,6 @@
       "description": "Eyeshadow palette with soft tones",
       "imageUrl": "https://picsum.photos/seed/palette1/600/600",
       "imageHint": "eyeshadow palette"
-    },
-    {
-      "id": "product-cleanser",
-      "description": "Gentle foaming cleanser",
-      "imageUrl": "https://picsum.photos/seed/cleanser1/600/600",
-      "imageHint": "face cleanser"
-    },
-    {
-      "id": "product-moisturizer",
-      "description": "Hydrating face cream",
-      "imageUrl": "https://picsum.photos/seed/cream1/600/600",
-      "imageHint": "face moisturizer"
     }
   ]
 }

@@ -3,24 +3,33 @@ export type Role = 'customer' | 'seller' | 'admin';
 
 export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: Role;
-  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Product {
   id: string;
   sellerId: string;
-  sellerName: string;
+  sellerName?: string;
   title: string;
   description: string;
   price: number;
-  category: string;
-  images: string[];
+  categoryId: string;
+  category?: string;
+  imageUrls: string[];
+  images: string[]; // Keep for backward compatibility with existing components
   stock: number;
-  rating: number;
-  numReviews: number;
+  rating?: number;
+  averageRating?: number;
+  numReviews?: number;
+  reviewCount?: number;
+  isFeatured?: boolean;
+  createdAt: any;
+  updatedAt: any;
 }
 
 export interface Review {
@@ -45,22 +54,26 @@ export interface Order {
   id: string;
   customerId: string;
   items: OrderItem[];
-  total: number;
-  status: 'processing' | 'shipped' | 'delivered';
-  paymentStatus: 'pending' | 'paid';
+  totalAmount: number;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  orderDate: string;
   createdAt: string;
 }
 
-export interface SellerApplication {
+export interface Testimonial {
   id: string;
-  userId: string;
-  fullName: string;
-  businessName: string;
-  phone: string;
-  bankDetails: {
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-  };
-  status: 'pending' | 'approved' | 'rejected';
+  customerName: string;
+  customerLocation: string;
+  comment: string;
+  rating: number;
+  customerImageUrl?: string;
+  isApproved: boolean;
+}
+
+export interface NewsletterSubscription {
+  id: string;
+  email: string;
+  subscriptionDate: any;
+  isActive: boolean;
 }

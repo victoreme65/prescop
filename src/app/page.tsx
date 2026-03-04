@@ -1,4 +1,6 @@
 
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
@@ -6,19 +8,81 @@ import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/marketplace/product-card';
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, ShieldCheck, Truck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowRight, Sparkles, ShieldCheck, Truck, Star, Send } from 'lucide-react';
+import { useState } from 'react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const db = useFirestore();
+  const { toast } = useToast();
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsSubscribing(true);
+    addDoc(collection(db, 'newsletterSubscriptions'), {
+      email,
+      subscriptionDate: serverTimestamp(),
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }).then(() => {
+      toast({
+        title: "Successfully subscribed!",
+        description: "You'll now receive our weekly beauty updates.",
+      });
+      setEmail('');
+    }).catch(() => {
+      toast({
+        variant: "destructive",
+        title: "Subscription failed",
+        description: "Something went wrong. Please try again later.",
+      });
+    }).finally(() => {
+      setIsSubscribing(false);
+    });
+  };
+
+  const testimonials = [
+    {
+      name: "Adesuwa E.",
+      location: "Lagos, Nigeria",
+      comment: "Prescop has changed how I buy skincare. The quality is always guaranteed and delivery is so fast!",
+      rating: 5,
+      image: "https://picsum.photos/seed/testi1/100/100"
+    },
+    {
+      name: "Ibrahim K.",
+      location: "Abuja, Nigeria",
+      comment: "Finally, a place where I can find authentic international brands and local gems in one place.",
+      rating: 5,
+      image: "https://picsum.photos/seed/testi2/100/100"
+    },
+    {
+      name: "Chinelo O.",
+      location: "Enugu, Nigeria",
+      comment: "The customer service is top-notch. I had a small issue with an order and it was resolved in minutes.",
+      rating: 5,
+      image: "https://picsum.photos/seed/testi3/100/100"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <main>
         {/* Hero Section */}
-        <section className="relative h-[80vh] min-h-[600px] w-full flex items-center overflow-hidden">
+        <section className="relative h-[85vh] min-h-[600px] w-full flex items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
-              src="https://picsum.photos/seed/prescop-hero/1200/600"
+              src="https://picsum.photos/seed/prescop-hero-v2/1600/900"
               alt="Beauty Hero"
               fill
               className="object-cover"
@@ -33,19 +97,19 @@ export default function Home() {
               <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 rounded-full text-sm font-medium">
                 New Collection 2024
               </Badge>
-              <h1 className="font-headline text-5xl md:text-7xl font-bold leading-tight mb-6">
-                Redefine Your <br />
-                <span className="text-primary italic">Natural Glow</span>
+              <h1 className="font-headline text-5xl md:text-8xl font-bold leading-tight mb-6 tracking-tighter">
+                Discover Your <br />
+                <span className="text-primary italic">Timeless Beauty</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 font-body leading-relaxed max-w-lg">
-                Discover Nigeria's most curated collection of premium beauty products. From local artisan skincare to global makeup icons.
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 font-body leading-relaxed max-w-lg">
+                The ultimate destination for premium skincare, makeup, and fragrances. Curated for the modern African aesthetic.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild className="rounded-full px-8 bg-primary hover:bg-primary/90 text-white shadow-lg">
-                  <Link href="/products">Shop Collection</Link>
+                <Button size="lg" asChild className="rounded-full h-14 px-10 bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20">
+                  <Link href="/products">Shop the Collection</Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="rounded-full px-8 border-primary/20">
-                  <Link href="/seller/apply">Become a Seller</Link>
+                <Button size="lg" variant="outline" asChild className="rounded-full h-14 px-10 border-primary/20 hover:bg-primary/5">
+                  <Link href="/seller/apply">Start Selling</Link>
                 </Button>
               </div>
             </div>
@@ -53,28 +117,34 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="py-16 bg-white">
+        <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="flex items-center gap-4 p-6 rounded-2xl bg-secondary/20">
-                <ShieldCheck className="h-10 w-10 text-primary" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-transform hover:-translate-y-1">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="h-8 w-8 text-primary" />
+                </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg">Guaranteed Quality</h3>
-                  <p className="text-sm text-muted-foreground">Only authentic products from verified sellers.</p>
+                  <h3 className="font-headline font-bold text-xl mb-2">Verified Sellers</h3>
+                  <p className="text-muted-foreground leading-relaxed">Every product is authenticated and sourced from certified beauty vendors.</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-6 rounded-2xl bg-secondary/20">
-                <Truck className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-transform hover:-translate-y-1">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Truck className="h-8 w-8 text-primary" />
+                </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg">Fast Delivery</h3>
-                  <p className="text-sm text-muted-foreground">Reliable nationwide shipping across Nigeria.</p>
+                  <h3 className="font-headline font-bold text-xl mb-2">Swift Nationwide Delivery</h3>
+                  <p className="text-muted-foreground leading-relaxed">Efficient logistics network covering all 36 states in Nigeria within 3-5 days.</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-6 rounded-2xl bg-secondary/20">
-                <Sparkles className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center text-center gap-4 p-8 rounded-[2rem] bg-background shadow-sm border border-border/50 transition-transform hover:-translate-y-1">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                </div>
                 <div>
-                  <h3 className="font-headline font-bold text-lg">Curated Selection</h3>
-                  <p className="text-sm text-muted-foreground">Handpicked beauty essentials just for you.</p>
+                  <h3 className="font-headline font-bold text-xl mb-2">Personalized Curation</h3>
+                  <p className="text-muted-foreground leading-relaxed">AI-powered recommendations tailored to your unique skin tone and type.</p>
                 </div>
               </div>
             </div>
@@ -82,78 +152,87 @@ export default function Home() {
         </section>
 
         {/* Featured Products */}
-        <section className="py-20 bg-background">
+        <section className="py-24">
           <div className="container mx-auto px-4">
-            <div className="flex items-end justify-between mb-12">
-              <div>
-                <h2 className="font-headline text-4xl font-bold mb-4">Trending Now</h2>
-                <p className="text-muted-foreground">The most loved beauty picks this week.</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+              <div className="max-w-xl">
+                <h2 className="font-headline text-4xl md:text-5xl font-bold mb-6">Trending This Week</h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">Explore our most sought-after beauty essentials, chosen by the Prescop community.</p>
               </div>
-              <Button variant="link" asChild className="text-primary font-bold">
+              <Button asChild variant="link" className="text-primary font-bold text-lg h-auto p-0 group">
                 <Link href="/products" className="flex items-center gap-2">
-                  View All Products <ArrowRight className="h-4 w-4" />
+                  Discover All Products <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {MOCK_PRODUCTS.slice(0, 4).map((product) => (
+              {MOCK_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Categories Preview */}
-        <section className="py-20">
+        {/* Testimonials */}
+        <section className="py-24 bg-primary/5">
           <div className="container mx-auto px-4">
-            <h2 className="font-headline text-4xl font-bold mb-12 text-center">Shop By Category</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
-              <Link href="/products?category=Skincare" className="relative group overflow-hidden rounded-3xl md:row-span-2">
-                <Image 
-                  src="https://picsum.photos/seed/skincare-cat/800/1200" 
-                  alt="Skincare" 
-                  fill 
-                  className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                  data-ai-hint="woman skincare"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-end p-8">
-                  <div className="text-white">
-                    <h3 className="font-headline text-3xl font-bold mb-2">Skincare</h3>
-                    <p className="text-white/80">Nourish and protect your radiance</p>
+            <h2 className="font-headline text-4xl md:text-5xl font-bold mb-16 text-center">Loved by Thousands</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((t, i) => (
+                <div key={i} className="p-10 rounded-[2.5rem] bg-background shadow-sm border border-primary/10 flex flex-col gap-6">
+                  <div className="flex gap-1">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star key={j} className="h-4 w-4 fill-primary text-primary" />
+                    ))}
+                  </div>
+                  <p className="text-lg italic text-muted-foreground leading-relaxed">"{t.comment}"</p>
+                  <div className="flex items-center gap-4 mt-auto">
+                    <div className="relative h-12 w-12 rounded-full overflow-hidden">
+                      <Image src={t.image} alt={t.name} fill className="object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">{t.name}</h4>
+                      <p className="text-xs text-muted-foreground">{t.location}</p>
+                    </div>
                   </div>
                 </div>
-              </Link>
-              <Link href="/products?category=Makeup" className="relative group overflow-hidden rounded-3xl">
-                <Image 
-                  src="https://picsum.photos/seed/makeup-cat/800/600" 
-                  alt="Makeup" 
-                  fill 
-                  className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                  data-ai-hint="luxury makeup"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-end p-8">
-                  <div className="text-white">
-                    <h3 className="font-headline text-3xl font-bold mb-2">Makeup</h3>
-                    <p className="text-white/80">Unleash your creativity</p>
-                  </div>
-                </div>
-              </Link>
-              <Link href="/products?category=Fragrance" className="relative group overflow-hidden rounded-3xl">
-                <Image 
-                  src="https://picsum.photos/seed/perfume-cat/800/600" 
-                  alt="Fragrance" 
-                  fill 
-                  className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                  data-ai-hint="perfume bottle"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-end p-8">
-                  <div className="text-white">
-                    <h3 className="font-headline text-3xl font-bold mb-2">Fragrance</h3>
-                    <p className="text-white/80">Scents that define you</p>
-                  </div>
-                </div>
-              </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Newsletter */}
+        <section className="py-24">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto rounded-[3rem] bg-primary p-12 md:p-20 text-center text-primary-foreground relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-12 opacity-10">
+                <Send className="h-64 w-64 rotate-12" />
+              </div>
+              <div className="relative z-10">
+                <h2 className="font-headline text-4xl md:text-6xl font-bold mb-6">Join the Beauty Circle</h2>
+                <p className="text-lg md:text-xl opacity-90 mb-10 max-w-xl mx-auto leading-relaxed">
+                  Subscribe to get early access to drops, exclusive beauty tips, and special offers.
+                </p>
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                  <Input 
+                    placeholder="Enter your email" 
+                    className="h-14 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    type="submit"
+                    className="h-14 rounded-full px-8 bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
+                    disabled={isSubscribing}
+                  >
+                    {isSubscribing ? 'Joining...' : 'Subscribe'}
+                  </Button>
+                </form>
+                <p className="mt-6 text-sm opacity-60">No spam, just pure beauty. Unsubscribe anytime.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -170,7 +249,7 @@ function Badge({ children, variant = "default", className = "" }: { children: Re
     outline: "border border-input bg-transparent"
   };
   return (
-    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${className}`}>
+    <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${className}`}>
       {children}
     </div>
   );
