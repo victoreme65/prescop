@@ -4,67 +4,55 @@
 
 @layer base {
   :root {
+    /* Refined high-contrast palette for Light Mode */
     --background: 30 40% 98%;
-    --foreground: 345 25% 10%;
+    --foreground: 345 25% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 345 25% 10%;
+    --card-foreground: 345 25% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 345 25% 10%;
-    --primary: 345 60% 40%;
-    --primary-foreground: 345 10% 100%;
+    --popover-foreground: 345 25% 12%;
+    --primary: 345 65% 38%; /* Darker pink for better visibility */
+    --primary-foreground: 0 0% 100%;
     --secondary: 30 30% 92%;
     --secondary-foreground: 345 30% 25%;
     --muted: 30 20% 90%;
     --muted-foreground: 345 15% 35%;
-    --accent: 315 50% 45%;
-    --accent-foreground: 345 10% 100%;
+    --accent: 315 55% 42%; /* High-contrast accent */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 50.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 345 15% 85%;
     --input: 345 15% 85%;
-    --ring: 345 60% 40%;
+    --ring: 345 65% 38%;
     --radius: 1.25rem;
   }
 
   .dark {
-    --background: 345 30% 5%;
+    --background: 345 30% 6%;
     --foreground: 345 10% 96%;
     --card: 345 25% 8%;
     --card-foreground: 345 10% 96%;
     --popover: 345 25% 8%;
     --popover-foreground: 345 10% 96%;
-    --primary: 345 55% 60%;
+    --primary: 345 60% 65%;
     --primary-foreground: 345 10% 10%;
     --secondary: 345 20% 12%;
     --secondary-foreground: 345 10% 96%;
     --muted: 345 20% 12%;
     --muted-foreground: 345 10% 60%;
-    --accent: 315 45% 55%;
+    --accent: 315 50% 60%;
     --accent-foreground: 345 10% 96%;
-    --destructive: 0 62.8% 25.6%;
-    --destructive-foreground: 0 0% 98%;
     --border: 345 20% 16%;
     --input: 345 20% 16%;
-    --ring: 345 55% 60%;
+    --ring: 345 60% 65%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-body antialiased;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tight leading-tight;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-body antialiased selection:bg-primary/20; }
+  h1, h2, h3, h4, h5, h6 { @apply font-headline tracking-tight leading-tight; }
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
