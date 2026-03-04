@@ -1,0 +1,707 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Prescop platform, which can be a customer, seller, or admin. Does not store authentication credentials.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for login and notifications.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the platform (e.g., 'customer', 'seller', 'admin')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "createdAt"
+      ]
+    },
+    "SellerProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SellerProfile",
+      "type": "object",
+      "description": "Stores detailed business information for sellers on the Prescop marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SellerProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the associated User entity. (Relationship: User 1:1 SellerProfile)"
+        },
+        "businessName": {
+          "type": "string",
+          "description": "The registered business name of the seller."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The contact phone number for the seller's business."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country where the seller's business is registered."
+        },
+        "bankName": {
+          "type": "string",
+          "description": "The name of the bank for seller payouts."
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "The bank account number for seller payouts."
+        },
+        "accountName": {
+          "type": "string",
+          "description": "The name on the bank account for seller payouts."
+        },
+        "status": {
+          "type": "string",
+          "description": "The approval status of the seller's application ('pending', 'approved', 'rejected')."
+        },
+        "applicationDate": {
+          "type": "string",
+          "description": "Timestamp when the seller application was submitted.",
+          "format": "date-time"
+        },
+        "approvalDate": {
+          "type": "string",
+          "description": "Timestamp when the seller application was approved by an admin, if applicable.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the seller profile record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the seller profile record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "businessName",
+        "phone",
+        "country",
+        "bankName",
+        "accountNumber",
+        "accountName",
+        "status",
+        "applicationDate",
+        "createdAt"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Defines product categories used for organization and filtering.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product category (e.g., 'Skincare', 'Makeup')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the category."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of an image representing the category, for display purposes.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the category was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the category was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "createdAt"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a single product listed for sale on the marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the SellerProfile entity that owns this product. (Relationship: SellerProfile 1:N Product)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The current selling price of the product."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to the Category entity this product belongs to. (Relationship: Category 1:N Product)"
+        },
+        "imageUrls": {
+          "type": "array",
+          "description": "An array of URLs for images of the product.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stock": {
+          "type": "number",
+          "description": "The number of units of this product currently in stock."
+        },
+        "averageRating": {
+          "type": "number",
+          "description": "The calculated average rating (1-5 stars) based on customer reviews.",
+          "format": "float"
+        },
+        "reviewCount": {
+          "type": "number",
+          "description": "The total number of reviews received for this product."
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Indicates if the product is marked as a featured item for display on the homepage."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the product was first listed.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the product details were last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sellerId",
+        "title",
+        "description",
+        "price",
+        "categoryId",
+        "imageUrls",
+        "stock",
+        "createdAt"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a customer's overall purchase transaction on the platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the User entity who placed the order. (Relationship: User 1:N Order)"
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "The shipping address for the order (e.g., JSON string or a combined string)."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount paid for the order, including all items and any shipping fees."
+        },
+        "commissionAmount": {
+          "type": "number",
+          "description": "The total commission amount deducted from this order for the marketplace."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "The status of the payment for this order ('pending', 'paid', 'failed', 'refunded')."
+        },
+        "orderStatus": {
+          "type": "string",
+          "description": "The fulfillment status of the order ('processing', 'shipped', 'delivered', 'cancelled')."
+        },
+        "paymentGatewayTransactionId": {
+          "type": "string",
+          "description": "The transaction ID provided by the payment gateway (e.g., Paystack)."
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "Timestamp when the order was placed.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the order record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the order record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "shippingAddress",
+        "totalAmount",
+        "paymentStatus",
+        "orderStatus",
+        "orderDate",
+        "createdAt"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents a single product item within a customer's order, linking to the specific product and seller.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order entity this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product entity purchased. (Relationship: Product 1:N OrderItem)"
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the SellerProfile entity of the product's seller. (Relationship: SellerProfile 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product purchased."
+        },
+        "priceAtOrder": {
+          "type": "number",
+          "description": "The price of the product at the time it was added to the order."
+        },
+        "sellerEarningsPerItem": {
+          "type": "number",
+          "description": "The portion of earnings for the seller from this specific item after commission."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the order item record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the order item record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "sellerId",
+        "quantity",
+        "priceAtOrder",
+        "sellerEarningsPerItem",
+        "createdAt"
+      ]
+    },
+    "Review": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Review",
+      "type": "object",
+      "description": "Allows customers to rate and comment on purchased products.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Review entity."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product entity being reviewed. (Relationship: Product 1:N Review)"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the User entity who submitted the review. (Relationship: User 1:N Review)"
+        },
+        "orderItemId": {
+          "type": "string",
+          "description": "Reference to the OrderItem entity associated with this review, ensuring a verified purchase. (Relationship: OrderItem 1:1 Review)"
+        },
+        "rating": {
+          "type": "number",
+          "description": "The star rating given to the product (1 to 5)."
+        },
+        "comment": {
+          "type": "string",
+          "description": "The textual comment or feedback provided by the customer."
+        },
+        "isApproved": {
+          "type": "boolean",
+          "description": "Indicates if the review has been approved by an admin for public display."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the review was submitted.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the review was last updated (e.g., by admin moderation).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "customerId",
+        "orderItemId",
+        "rating",
+        "comment",
+        "createdAt"
+      ]
+    },
+    "NewsletterSubscription": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "NewsletterSubscription",
+      "type": "object",
+      "description": "Stores email addresses of users who have subscribed to the Prescop newsletter.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the NewsletterSubscription entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the subscriber.",
+          "format": "email"
+        },
+        "subscriptionDate": {
+          "type": "string",
+          "description": "Timestamp when the user subscribed to the newsletter.",
+          "format": "date-time"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the subscription is currently active."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the subscription record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the subscription record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "subscriptionDate",
+        "createdAt"
+      ]
+    },
+    "Testimonial": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Testimonial",
+      "type": "object",
+      "description": "Stores general customer feedback and testimonials about the Prescop platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Testimonial entity."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "The name of the customer providing the testimonial (can be anonymized)."
+        },
+        "customerLocation": {
+          "type": "string",
+          "description": "The general location of the customer, e.g., 'Lagos, Nigeria'."
+        },
+        "comment": {
+          "type": "string",
+          "description": "The customer's feedback or comment about the platform."
+        },
+        "rating": {
+          "type": "number",
+          "description": "An optional star rating (1-5) for the overall service provided by Prescop."
+        },
+        "customerImageUrl": {
+          "type": "string",
+          "description": "URL of an optional image for the customer, e.g., a profile picture.",
+          "format": "uri"
+        },
+        "isApproved": {
+          "type": "boolean",
+          "description": "Indicates if the testimonial has been approved by an admin for public display."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the testimonial was submitted.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the testimonial was last updated (e.g., by admin moderation).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerName",
+        "comment",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores core user profiles for customers, sellers, and admins. Documents are identified by the Firebase Authentication UID. Accessible by the user themselves, and potentially by admin.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/sellerProfiles/{sellerProfileId}",
+        "definition": {
+          "entityName": "SellerProfile",
+          "schema": {
+            "$ref": "#/backend/entities/SellerProfile"
+          },
+          "description": "Stores detailed business information for sellers. Nested under the user's path to enforce strong ownership. The `userId` is implicit in the path and denormalized in the document. The `status` field is critical for admin approval and public visibility, supporting QAPs. Accessible by the owner and admins.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns this seller profile."
+            },
+            {
+              "name": "sellerProfileId",
+              "description": "The unique identifier for the seller's business profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores product categories for organization and filtering. Publicly readable for product browsing, but writeable only by administrators. Supports QAPs for category listing.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for the product category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product listings available on the marketplace. Publicly readable for browsing and infinite scroll. Includes denormalized 'sellerId' for authorization independence, allowing sellers to manage their own products without requiring 'get()' operations in security rules. The 'isFeatured' field supports QAPs for homepage displays.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}/reviews/{reviewId}",
+        "definition": {
+          "entityName": "Review",
+          "schema": {
+            "$ref": "#/backend/entities/Review"
+          },
+          "description": "Stores customer reviews for specific products. Nested under products. Includes denormalized 'customerId' for authorization independence, allowing customers to manage their own reviews. The 'isApproved' field facilitates admin moderation and QAPs for public visibility.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier of the product being reviewed."
+            },
+            {
+              "name": "reviewId",
+              "description": "The unique identifier for the review."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores customer orders. Path-based ownership (`userId`) ensures only the customer who placed the order can access it. The 'customerId' is also denormalized in the document for clarity.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who placed the order."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores individual product items within a customer's order. Nested under orders for strong ownership and transactional consistency. 'sellerId' and 'productId' are denormalized for potential rule evaluations or seller-specific order item queries without cross-collection reads.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who placed the order."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the parent order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier for the specific item within the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/newsletterSubscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "NewsletterSubscription",
+          "schema": {
+            "$ref": "#/backend/entities/NewsletterSubscription"
+          },
+          "description": "Stores email addresses of users who have subscribed to the newsletter. Publicly writeable (via a form), but read/delete access is restricted to administrators.",
+          "params": [
+            {
+              "name": "subscriptionId",
+              "description": "The unique identifier for the newsletter subscription."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/testimonials/{testimonialId}",
+        "definition": {
+          "entityName": "Testimonial",
+          "schema": {
+            "$ref": "#/backend/entities/Testimonial"
+          },
+          "description": "Stores customer testimonials about the Prescop platform. Publicly readable only if 'isApproved' is true (QAP). Writeable by anyone (e.g., via a submission form), but requires admin approval for public display.",
+          "params": [
+            {
+              "name": "testimonialId",
+              "description": "The unique identifier for the testimonial."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "A dedicated collection for role-based access control. The existence of a document with the user's UID at this path grants global administrator privileges, adhering to DBAC principles for security rules.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of the user who holds an admin role."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure for Prescop is designed with a strong emphasis on **Authorization Independence** and **Query Accessibility Patterns (QAPs)**, as mandated. We achieve this primarily through structural segregation and strategic denormalization.\n\n**Authorization Independence:**\n1.  **Path-Based Ownership:** For user-specific and sensitive data like `Order` and `SellerProfile`, a hierarchical path structure like `/users/{userId}/orders/{orderId}` is used. This means the `userId` is directly embedded in the path, making rules simple (`allow read, write: if request.auth.uid == userId;`) without needing `get()` operations on parent documents.\n2.  **Denormalized Authorization Fields:** For collections where subcollection access relies on parent attributes, those attributes are denormalized. For instance:\n    *   Each `Product` document (`/products/{productId}`) includes its `sellerId`. This allows a seller to manage *only their* products (`allow write: if request.auth.uid == resource.data.sellerId;`) without performing a `get()` to check the product's seller profile or user document.\n    *   Each `Review` document (`/products/{productId}/reviews/{reviewId}`) includes `customerId`. This allows the customer who wrote the review to edit it (`allow write: if request.auth.uid == resource.data.customerId;`).\n    *   `OrderItem` documents, while nested under `/users/{userId}/orders/{orderId}/orderItems/{orderItemId}`, also denormalize `sellerId` and `productId` which could be used to enable sellers to query their associated order items directly, if needed, without `get()` on the parent order.\n3.  **DBAC (Database Access Control):** Global roles, specifically 'admin', are managed via an existence check in a dedicated collection: `/roles_admin/{adminId}`. The presence of a document at `roles_admin/request.auth.uid` grants admin permissions, avoiding custom claims and `get()` calls for role verification.\n\n**Query Accessibility Patterns (QAPs):**\n1.  **Structural Segregation for Public Data:** Collections intended for public consumption, such as `Categories` (`/categories/{categoryId}`), `Products` (`/products/{productId}`), and `Testimonials` (`/testimonials/{testimonialId}`), are placed at the root level. This allows for efficient `list` operations without security rules acting as filters.\n2.  **Explicit State Modeling for Public Visibility:** For entities like `Product`, `Review`, and `Testimonial`, fields such as `isFeatured` (for products), `isApproved` (for reviews and testimonials), and `status` (for seller profiles) are used. These fields explicitly define the visibility or state of the document. Rules can then check these fields (`allow read: if resource.data.isApproved == true;`) to ensure only relevant and approved content is publicly visible during `list` queries, adhering to QAPs without filtering after retrieval.\n3.  **Infinite Scroll:** The structure of `/products` allows for efficient querying with `orderBy` and `startAfter` clauses for infinite scroll functionality on the public website, ensuring performance and scalability.\n\nThis design minimizes rule complexity, eliminates costly and insecure `get()` calls in rules, and ensures that public and private data access patterns are clearly defined and efficiently managed, meeting the demands for a secure, scalable, and debuggable Firestore implementation."
+  }
+}

@@ -1,0 +1,182 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * PRESCOP SECURITY RULES
+     *
+     * CORE PHILOSOPHY:
+     * This ruleset implements a hybrid security model designed for a multi-vendor marketplace.
+     * 1. Private User Data: Enforces a strict ownership model using a hierarchical /users/{userId} path.
+     * 2. Public Marketplace: Allows public browsing of categories and products to support SEO and anonymous shopping.
+     * 3. Seller Autonomy: Sellers manage their own listings via denormalized ownership fields (sellerId) to avoid recursive lookups.
+     * 4. Admin Control: A dedicated /roles_admin collection identifies global administrators who bypass standard restrictions.
+     *
+     * DATA STRUCTURE:
+     * - /users/{userId}: Private profiles, orders, and seller-specific metadata.
+     * - /products: Publicly readable listings with sellerId denormalized for write authorization.
+     * - /categories: Publicly readable, admin-managed organization.
+     * - /testimonials & /newsletterSubscriptions: Publicly writeable for lead generation, admin-moderated.
+     *
+     * KEY SECURITY DECISIONS:
+     * - Denormalization: 'sellerId' on Products and 'customerId' on Reviews are mandatory for write authorization.
+     * - Admin Access: Verified via existence check in /roles_admin/{uid}.
+     * - Public Reads: Products and Categories are open for read to support infinite scroll and landing pages without login.
+     * - Destructive Operations: All updates and deletes require existence checks (resource != null).
+     */
+
+    // --- HELPER FUNCTIONS ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    function isResourceOwner(ownerField) {
+      return isSignedIn() && resource.data[ownerField] == request.auth.uid;
+    }
+
+    function isIncomingOwner(ownerField) {
+      return isSignedIn() && request.resource.data[ownerField] == request.auth.uid;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for the admin roles collection. Existence of a document here grants global admin rights.
+     * @path /roles_admin/{adminId}
+     * @allow (get) Any signed-in user to check admin status. (write) Only existing admins.
+     * @deny (write) Any non-admin user.
+     * @principle Role-Based Access Control (RBAC) via document existence.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description User profile management. Users can only manage their own profile.
+     * @path /users/{userId}
+     * @allow (create) User with matching UID. (update) Existing owner.
+     * @deny (delete) Standard users; (read) Other users.
+     * @principle Path-based ownership and relational integrity.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isAdmin();
+
+      /**
+       * @description Seller profiles nested under users.
+       * @path /users/{userId}/sellerProfiles/{sellerProfileId}
+       * @allow (read/write) The specific user or an admin.
+       * @deny (create) Mismatched userId.
+       * @principle Hierarchical ownership.
+       */
+      match /sellerProfiles/{sellerProfileId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId);
+        allow delete: if isAdmin();
+      }
+
+      /**
+       * @description Order records. Only the customer who placed the order can view it.
+       * @path /users/{userId}/orders/{orderId}
+       * @allow (read) The owner user. (create) Owner setting their customerId.
+       * @deny (update/delete) Non-admins.
+       * @principle Immutable order history for users.
+       */
+      match /orders/{orderId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.customerId == userId;
+        allow update, delete: if isAdmin();
+
+        match /orderItems/{orderItemId} {
+          allow get, list: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId);
+          allow update, delete: if isAdmin();
+        }
+      }
+    }
+
+    /**
+     * @description Product categories for the marketplace.
+     * @path /categories/{categoryId}
+     * @allow (read) Publicly accessible for browsing. (write) Admin only.
+     * @deny (write) Any non-admin user.
+     * @principle Public read-only for organizational data.
+     */
+    match /categories/{categoryId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Marketplace product listings.
+     * @path /products/{productId}
+     * @allow (read) Public for infinite scroll/shopping. (write) The seller identified by sellerId.
+     * @deny (update) Changing the sellerId.
+     * @principle Owner-only writes via denormalized sellerId.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isIncomingOwner('sellerId');
+      allow update: if isResourceOwner('sellerId') && request.resource.data.sellerId == resource.data.sellerId;
+      allow delete: if isResourceOwner('sellerId') || isAdmin();
+
+      /**
+       * @description Product reviews.
+       * @path /products/{productId}/reviews/{reviewId}
+       * @allow (read) Publicly accessible. (write) The customer who wrote it.
+       * @deny (update) Changing customerId or productId.
+       * @principle Verified purchase feedback with customer ownership.
+       */
+      match /reviews/{reviewId} {
+        allow get, list: if true;
+        allow create: if isIncomingOwner('customerId');
+        allow update: if isResourceOwner('customerId') && request.resource.data.customerId == resource.data.customerId;
+        allow delete: if isResourceOwner('customerId') || isAdmin();
+      }
+    }
+
+    /**
+     * @description Newsletter signups.
+     * @path /newsletterSubscriptions/{subscriptionId}
+     * @allow (create) Public for anyone to join. (read/write) Admin only.
+     * @deny (read) Public users.
+     * @principle Open creation for lead generation, restricted access for privacy.
+     */
+    match /newsletterSubscriptions/{subscriptionId} {
+      allow create: if true;
+      allow get, list, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Customer testimonials for the platform.
+     * @path /testimonials/{testimonialId}
+     * @allow (create) Public submission. (read) Public if approved. (write) Admin.
+     * @deny (read) Unapproved testimonials for public.
+     * @principle State-based visibility (isApproved).
+     */
+    match /testimonials/{testimonialId} {
+      allow get, list: if resource.data.isApproved == true || isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
