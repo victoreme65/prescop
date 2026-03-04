@@ -45,43 +45,43 @@ export function Navbar() {
     )}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 h-14 md:h-16">
         <div className="flex items-center gap-4 lg:gap-12">
-          <Link href="/" className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
+          <Link href="/" className="font-headline text-2xl md:text-4xl font-bold text-primary tracking-tight">
             PRESCOP
           </Link>
           
-          <div className="hidden lg:flex items-center gap-8 text-sm font-semibold">
+          <div className="hidden lg:flex items-center gap-10 text-sm font-bold uppercase tracking-widest">
             <Link href="/products" className="hover:text-primary transition-colors">Shop All</Link>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 hover:text-primary transition-colors outline-none">
                 Categories <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="rounded-xl p-2 w-48 shadow-xl border-secondary">
+              <DropdownMenuContent className="rounded-2xl p-2 w-56 shadow-2xl border-secondary">
                 <DropdownMenuItem asChild><Link href="/products?category=Skincare">Skincare</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/products?category=Makeup">Makeup</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/products?category=Fragrance">Fragrance</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href="/seller/apply" className="text-accent hover:opacity-80 transition-opacity">Become a Seller</Link>
+            <Link href="/seller/apply" className="text-accent hover:opacity-80 transition-opacity">Become Seller</Link>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 justify-end flex-1">
+        <div className="flex items-center gap-2 sm:gap-6 justify-end flex-1">
           <div className="hidden md:flex relative max-w-xs w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search beauty..." 
-              className="pl-10 h-10 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm"
+              className="pl-12 h-11 rounded-full bg-secondary/40 border-none focus-visible:ring-primary/50 text-sm font-medium"
             />
           </div>
 
           <ThemeToggle />
           
-          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 rounded-full" onClick={() => setIsSearchOpen(!isSearchOpen)}>
             <Search className="h-5 w-5" />
           </Button>
 
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative h-10 w-10">
+            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full bg-secondary/20 border border-transparent hover:border-primary/20">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-accent font-bold ring-2 ring-background text-white">
@@ -94,54 +94,58 @@ export function Navbar() {
           <div className="hidden sm:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full border border-secondary p-0">
-                  <User className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border border-secondary p-0 overflow-hidden">
+                  <User className="h-5 w-5 text-primary" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-secondary">
-                <DropdownMenuLabel className="font-headline font-bold">My Account</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-64 p-3 rounded-[2rem] shadow-2xl border-secondary">
+                <DropdownMenuLabel className="font-headline font-bold text-lg mb-2">My Prescop</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/profile" className="flex items-center gap-3"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/seller/dashboard" className="flex items-center gap-3"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/profile" className="flex items-center gap-4 py-3"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/seller/dashboard" className="flex items-center gap-4 py-3"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive"><LogOut className="h-4 w-4" /> Log out</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive py-3"><LogOut className="h-4 w-4" /> Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 rounded-full" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
       </div>
 
+      {/* Mobile Search Overlay */}
       <div className={cn(
         "absolute inset-x-0 top-full bg-background border-b px-4 py-3 md:hidden transition-all duration-300",
         isSearchOpen ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none overflow-hidden"
       )}>
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search items..." className="pl-10 h-11 rounded-full bg-secondary/40 border-none text-sm" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search items..." className="pl-12 h-12 rounded-full bg-secondary/40 border-none text-sm font-medium" />
         </div>
       </div>
 
+      {/* Mobile Drawer */}
       <div className={cn(
         "fixed inset-x-0 top-[60px] z-50 lg:hidden bg-background border-b shadow-2xl transition-all duration-500 origin-top overflow-hidden",
-        isMenuOpen ? "h-[calc(100vh-60px)] opacity-100 py-8 px-6" : "h-0 opacity-0"
+        isMenuOpen ? "h-[calc(100vh-60px)] opacity-100 py-10 px-8" : "h-0 opacity-0"
       )}>
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-6">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Explore Collection</p>
-            <Link href="/products" className="text-2xl font-bold font-headline">Shop All</Link>
-            <Link href="/products?category=Skincare" className="text-2xl font-bold font-headline">Skincare</Link>
-            <Link href="/products?category=Makeup" className="text-2xl font-bold font-headline">Makeup</Link>
-            <Link href="/products?category=Fragrance" className="text-2xl font-bold font-headline">Fragrance</Link>
+        <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-8">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-2">Explore Marketplace</p>
+            <Link href="/products" className="text-4xl font-bold font-headline">Shop All</Link>
+            <Link href="/products?category=Skincare" className="text-3xl font-bold font-headline">Skincare</Link>
+            <Link href="/products?category=Makeup" className="text-3xl font-bold font-headline">Makeup</Link>
+            <Link href="/products?category=Fragrance" className="text-3xl font-bold font-headline">Fragrance</Link>
           </div>
           
-          <div className="flex flex-col gap-6 pt-8 border-t">
-            <Link href="/seller/apply" className="text-2xl font-bold font-headline text-accent">Become a Seller</Link>
-            <Link href="/profile" className="flex items-center gap-3 text-2xl font-bold font-headline"><User className="h-6 w-6" /> My Profile</Link>
-            <Link href="/seller/dashboard" className="flex items-center gap-3 text-2xl font-bold font-headline"><LayoutDashboard className="h-6 w-6" /> Seller Panel</Link>
+          <div className="flex flex-col gap-8 pt-10 border-t">
+            <Link href="/seller/apply" className="text-3xl font-bold font-headline text-accent">Become a Seller</Link>
+            <div className="flex gap-6 mt-4">
+              <Link href="/profile" className="flex items-center gap-3 text-xl font-bold"><User className="h-6 w-6" /> Profile</Link>
+              <Link href="/seller/dashboard" className="flex items-center gap-3 text-xl font-bold"><LayoutDashboard className="h-6 w-6" /> Panel</Link>
+            </div>
           </div>
         </div>
       </div>
