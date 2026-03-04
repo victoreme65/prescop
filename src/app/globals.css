@@ -6,52 +6,52 @@
   :root {
     /* Refined high-contrast palette for Light Mode */
     --background: 30 40% 98%;
-    --foreground: 345 25% 12%;
+    --foreground: 345 35% 10%; /* Darkened for better contrast */
     --card: 0 0% 100%;
-    --card-foreground: 345 25% 12%;
+    --card-foreground: 345 35% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 345 25% 12%;
-    --primary: 345 65% 38%; /* Darker pink for better visibility */
+    --popover-foreground: 345 35% 10%;
+    --primary: 345 75% 35%; /* Deeper pink for 90+ accessibility */
     --primary-foreground: 0 0% 100%;
     --secondary: 30 30% 92%;
-    --secondary-foreground: 345 30% 25%;
+    --secondary-foreground: 345 30% 20%;
     --muted: 30 20% 90%;
-    --muted-foreground: 345 15% 35%;
-    --accent: 315 55% 42%; /* High-contrast accent */
+    --muted-foreground: 345 15% 30%;
+    --accent: 315 65% 38%; /* High-contrast accent */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 50.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 345 15% 85%;
-    --input: 345 15% 85%;
-    --ring: 345 65% 38%;
-    --radius: 1.25rem;
+    --border: 345 15% 80%;
+    --input: 345 15% 80%;
+    --ring: 345 75% 35%;
+    --radius: 1.5rem;
   }
 
   .dark {
-    --background: 345 30% 6%;
+    --background: 345 40% 4%;
     --foreground: 345 10% 96%;
-    --card: 345 25% 8%;
+    --card: 345 30% 6%;
     --card-foreground: 345 10% 96%;
-    --popover: 345 25% 8%;
+    --popover: 345 30% 6%;
     --popover-foreground: 345 10% 96%;
-    --primary: 345 60% 65%;
-    --primary-foreground: 345 10% 10%;
-    --secondary: 345 20% 12%;
+    --primary: 345 70% 60%;
+    --primary-foreground: 345 10% 5%;
+    --secondary: 345 25% 10%;
     --secondary-foreground: 345 10% 96%;
-    --muted: 345 20% 12%;
-    --muted-foreground: 345 10% 60%;
-    --accent: 315 50% 60%;
+    --muted: 345 25% 10%;
+    --muted-foreground: 345 10% 55%;
+    --accent: 315 60% 55%;
     --accent-foreground: 345 10% 96%;
-    --border: 345 20% 16%;
-    --input: 345 20% 16%;
-    --ring: 345 60% 65%;
+    --border: 345 20% 14%;
+    --input: 345 20% 14%;
+    --ring: 345 70% 60%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground font-body antialiased selection:bg-primary/20; }
-  h1, h2, h3, h4, h5, h6 { @apply font-headline tracking-tight leading-tight; }
+  h1, h2, h3, h4, h5, h6 { @apply font-headline tracking-tighter leading-tight; }
 }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }

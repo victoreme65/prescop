@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, ShoppingBag, User, Menu, X, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, LayoutDashboard, LogOut, ChevronDown, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const cartCount = 2;
@@ -29,10 +29,6 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [pathname]);
 
   return (
     <nav className={cn(
@@ -55,13 +51,13 @@ export function Navbar() {
         <div className="flex items-center gap-2 sm:gap-6 flex-1 justify-end">
           <div className="hidden md:flex relative max-w-xs w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search beauty..." className="pl-12 h-11 rounded-full bg-secondary/40 border-none font-medium text-xs" />
+            <Input placeholder="Search beauty..." className="pl-12 h-11 rounded-full bg-secondary/40 border-none font-bold text-xs" />
           </div>
 
           <ThemeToggle />
           
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full bg-secondary/20">
+            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full bg-secondary/20 hover:bg-primary/10 transition-colors">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white font-bold ring-2 ring-background">
@@ -74,53 +70,56 @@ export function Navbar() {
           <div className="hidden sm:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border border-secondary p-0 overflow-hidden">
+                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border border-secondary p-0 overflow-hidden hover:border-primary/50 transition-colors">
                   <User className="h-5 w-5 text-primary" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 p-3 rounded-[2rem] shadow-2xl border-secondary">
-                <DropdownMenuLabel className="font-headline font-bold text-xl mb-2">My Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-headline font-bold text-2xl mb-2 px-3">My Beauty</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/profile" className="py-3 flex items-center gap-3"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/seller/dashboard" className="py-3 flex items-center gap-3"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/profile" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/seller/dashboard" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive py-3"><LogOut className="h-4 w-4" /> Sign Out</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive py-3 px-4 font-bold rounded-xl"><LogOut className="h-4 w-4" /> Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          <Button variant="ghost" size="icon" className="lg:hidden h-11 w-11 rounded-full" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
-        </div>
-      </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden h-11 w-11 rounded-full bg-secondary/20">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md p-8">
+              <SheetHeader className="mb-12">
+                <SheetTitle className="font-headline text-4xl font-bold text-primary tracking-tighter text-left">PRESCOP</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-6">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-4">Menu</p>
+                  <Link href="/products" className="text-5xl font-bold font-headline hover:text-primary transition-colors tracking-tighter">Marketplace</Link>
+                  <Link href="/seller/apply" className="text-4xl font-bold font-headline hover:text-primary transition-colors tracking-tighter">Sell With Us</Link>
+                  <Link href="/about" className="text-4xl font-bold font-headline hover:text-primary transition-colors tracking-tighter">Our Story</Link>
+                </div>
+                
+                <div className="flex flex-col gap-6 pt-10 border-t">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account</p>
+                  <div className="flex flex-col gap-4">
+                    <Link href="/profile" className="flex items-center gap-4 text-xl font-bold"><User className="h-6 w-6 text-primary" /> My Profile</Link>
+                    <Link href="/seller/dashboard" className="flex items-center gap-4 text-xl font-bold"><LayoutDashboard className="h-6 w-6 text-primary" /> Seller Dashboard</Link>
+                  </div>
+                </div>
 
-      {/* MOBILE DRAWER */}
-      <div className={cn(
-        "fixed inset-0 z-50 lg:hidden bg-background transition-all duration-500 origin-top pt-20 px-8",
-        isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
-      )}>
-        {/* Accessibility Fix: Hidden Titles for Screen Readers */}
-        <h2 className="sr-only">Mobile Navigation</h2>
-        <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-6">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-2">Shop Marketplace</p>
-            <Link href="/products" className="text-4xl font-bold font-headline">All Products</Link>
-            <Link href="/products?category=Skincare" className="text-3xl font-bold font-headline">Skincare</Link>
-            <Link href="/products?category=Makeup" className="text-3xl font-bold font-headline">Makeup</Link>
-          </div>
-          
-          <div className="flex flex-col gap-6 pt-10 border-t">
-            <Link href="/seller/apply" className="text-3xl font-bold font-headline text-primary">Become a Seller</Link>
-            <div className="flex gap-8 mt-4">
-              <Link href="/profile" className="flex items-center gap-3 text-lg font-bold"><User className="h-5 w-5" /> Profile</Link>
-              <Link href="/seller/dashboard" className="flex items-center gap-3 text-lg font-bold"><LayoutDashboard className="h-5 w-5" /> Panel</Link>
-            </div>
-          </div>
+                <div className="mt-auto">
+                  <Button asChild className="w-full h-16 rounded-full bg-primary font-bold text-lg">
+                    <Link href="/products">Shop The Collection</Link>
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-        <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-12 w-12" onClick={() => setIsMenuOpen(false)}>
-          <X className="h-8 w-8" />
-        </Button>
       </div>
     </nav>
   );
