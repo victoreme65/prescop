@@ -1,0 +1,41 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-skincare",
+      "description": "Elegant skincare products layout",
+      "imageUrl": "https://picsum.photos/seed/prescop-hero/1200/600",
+      "imageHint": "skincare beauty"
+    },
+    {
+      "id": "product-serum",
+      "description": "Luxury facial serum bottle",
+      "imageUrl": "https://picsum.photos/seed/serum1/600/600",
+      "imageHint": "facial serum"
+    },
+    {
+      "id": "product-lipstick",
+      "description": "Matte rose lipstick",
+      "imageUrl": "https://picsum.photos/seed/lipstick1/600/600",
+      "imageHint": "matte lipstick"
+    },
+    {
+      "id": "product-palette",
+      "description": "Eyeshadow palette with soft tones",
+      "imageUrl": "https://picsum.photos/seed/palette1/600/600",
+      "imageHint": "eyeshadow palette"
+    },
+    {
+      "id": "product-cleanser",
+      "description": "Gentle foaming cleanser",
+      "imageUrl": "https://picsum.photos/seed/cleanser1/600/600",
+      "imageHint": "face cleanser"
+    },
+    {
+      "id": "product-moisturizer",
+      "description": "Hydrating face cream",
+      "imageUrl": "https://picsum.photos/seed/cream1/600/600",
+      "imageHint": "face moisturizer"
+    }
+  ]
+}
