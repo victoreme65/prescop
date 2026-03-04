@@ -1,4 +1,3 @@
-
 export type Role = 'customer' | 'seller' | 'admin';
 
 export interface User {
@@ -21,7 +20,7 @@ export interface Product {
   categoryId: string;
   category?: string;
   imageUrls: string[];
-  images: string[]; // Keep for backward compatibility with existing components
+  images?: string[]; // Handle legacy property
   stock: number;
   rating?: number;
   averageRating?: number;
@@ -43,20 +42,22 @@ export interface Review {
 }
 
 export interface OrderItem {
+  id: string;
+  orderId: string;
   productId: string;
-  title: string;
+  sellerId: string;
   quantity: number;
-  price: number;
-  image: string;
+  priceAtOrder: number;
+  displayImage?: string;
 }
 
 export interface Order {
   id: string;
   customerId: string;
-  items: OrderItem[];
+  shippingAddress: string;
   totalAmount: number;
-  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  orderStatus: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   orderDate: string;
   createdAt: string;
 }
@@ -76,4 +77,5 @@ export interface NewsletterSubscription {
   email: string;
   subscriptionDate: any;
   isActive: boolean;
+  source?: string;
 }
