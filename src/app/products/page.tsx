@@ -44,6 +44,8 @@ export default function ProductsPage() {
 
     setIsLoading(true);
     try {
+      // NOTE: Filtering + Sorting on different fields requires a composite index in Firestore.
+      // If the index isn't created, this query will fail with a console link to create it.
       let q = query(
         collection(db, 'products'),
         orderBy('createdAt', 'desc'),
@@ -112,13 +114,13 @@ export default function ProductsPage() {
         <div className="flex flex-col gap-10 mb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4 max-w-2xl text-center md:text-left">
-              <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight">Shop Collection</h1>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Premium beauty and cosmetics curated for the modern African aesthetic. 
+              <h1 className="font-headline text-4xl md:text-8xl font-bold tracking-tight">The Marketplace</h1>
+              <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
+                Authentic beauty curation for the modern African woman.
               </p>
               {categoryFilter && (
                 <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
-                  <Badge className="bg-primary text-white py-1.5 px-4 rounded-full flex items-center gap-2 font-bold text-xs">
+                  <Badge className="bg-primary text-white py-2 px-5 rounded-full flex items-center gap-2 font-bold text-xs border-none">
                     Category: {categoryFilter}
                     <X className="h-3 w-3 cursor-pointer" onClick={removeFilter} />
                   </Badge>
@@ -127,10 +129,10 @@ export default function ProductsPage() {
             </div>
             
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm">
+              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm bg-white/50">
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm">
+              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm bg-white/50">
                 <SlidersHorizontal className="h-4 w-4" /> Sort
               </Button>
             </div>
@@ -139,7 +141,7 @@ export default function ProductsPage() {
           <div className="relative w-full max-w-md group mx-auto md:mx-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
-              placeholder="Search items..." 
+              placeholder="Search products..." 
               className="pl-12 h-14 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -147,7 +149,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10">
           {products.map((product, index) => {
             const isLast = products.length === index + 1;
             return (
@@ -159,13 +161,13 @@ export default function ProductsPage() {
 
           {isLoading && [...Array(4)].map((_, i) => (
             <div key={i} className="space-y-4">
-              <Skeleton className="aspect-square rounded-[2rem] w-full" />
-              <div className="space-y-3 px-1">
+              <Skeleton className="aspect-square rounded-[3rem] w-full" />
+              <div className="space-y-3 px-2">
                 <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-6 w-3/4" />
-                <div className="flex justify-between items-center pt-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-10 w-24 rounded-full" />
+                <Skeleton className="h-7 w-3/4" />
+                <div className="flex justify-between items-center pt-3">
+                  <Skeleton className="h-7 w-20" />
+                  <Skeleton className="h-12 w-12 rounded-full" />
                 </div>
               </div>
             </div>
@@ -173,24 +175,24 @@ export default function ProductsPage() {
         </div>
 
         {!isLoading && products.length === 0 && (
-          <div className="py-24 text-center text-muted-foreground bg-secondary/10 rounded-[3rem] border-2 border-dashed flex flex-col items-center justify-center p-8">
-            <Search className="h-12 w-12 mb-6 opacity-20" />
-            <p className="text-xl font-headline italic">No products found for this criteria.</p>
-            <Button variant="link" onClick={removeFilter} className="mt-4 font-bold text-primary">Clear all filters</Button>
+          <div className="py-24 text-center text-muted-foreground bg-secondary/10 rounded-[4rem] border-2 border-dashed flex flex-col items-center justify-center p-12">
+            <Search className="h-16 w-16 mb-6 opacity-10" />
+            <p className="text-2xl font-headline italic">No products found in this category.</p>
+            <Button variant="link" onClick={removeFilter} className="mt-6 font-bold text-primary text-lg">Clear all filters</Button>
           </div>
         )}
 
         {isLoading && products.length > 0 && (
-          <div className="flex justify-center mt-16">
-            <div className="flex items-center gap-3 text-primary animate-pulse font-bold text-lg">
-              <span>Finding more items...</span>
+          <div className="flex justify-center mt-20">
+            <div className="flex items-center gap-4 text-primary animate-pulse font-bold text-xl">
+              <span>Finding more treasures...</span>
             </div>
           </div>
         )}
 
         {!hasMore && products.length > 0 && (
-          <div className="mt-20 text-center py-16 border-t border-secondary/50">
-            <p className="text-muted-foreground font-headline text-lg italic">
+          <div className="mt-24 text-center py-20 border-t border-secondary/50">
+            <p className="text-muted-foreground font-headline text-2xl italic opacity-60">
               You've explored the entire collection.
             </p>
           </div>
