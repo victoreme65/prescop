@@ -9,7 +9,8 @@ import {
   getDocs, 
   orderBy,
   QueryDocumentSnapshot,
-  DocumentData
+  DocumentData,
+  where
 } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Navbar } from '@/components/layout/navbar';
@@ -18,13 +19,19 @@ import { ProductCard } from '@/components/marketplace/product-card';
 import { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Filter, SlidersHorizontal, Search } from 'lucide-react';
+import { Filter, SlidersHorizontal, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 const PRODUCTS_PER_PAGE = 8;
 
 export default function ProductsPage() {
   const db = useFirestore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const categoryFilter = searchParams.get('category');
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +49,10 @@ export default function ProductsPage() {
         orderBy('createdAt', 'desc'),
         limit(PRODUCTS_PER_PAGE)
       );
+
+      if (categoryFilter) {
+        q = query(q, where('category', '==', categoryFilter));
+      }
 
       if (!isInitial && lastDoc) {
         q = query(q, startAfter(lastDoc));
@@ -68,12 +79,11 @@ export default function ProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [db, lastDoc, isLoading, hasMore]);
+  }, [db, lastDoc, isLoading, hasMore, categoryFilter]);
 
-  // Initial fetch
   useEffect(() => {
     fetchProducts(true);
-  }, []);
+  }, [categoryFilter]);
 
   const lastProductRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -88,42 +98,56 @@ export default function ProductsPage() {
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore, fetchProducts]);
 
+  const removeFilter = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('category');
+    router.push(`/products?${params.toString()}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
-        <div className="flex flex-col gap-6 md:gap-10 mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
-              <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Shop Collection</h1>
-              <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl">
-                Explore our full range of premium beauty essentials.
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20">
+        <div className="flex flex-col gap-10 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4 max-w-2xl text-center md:text-left">
+              <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight">Shop Collection</h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Premium beauty and cosmetics curated for the modern African aesthetic. 
               </p>
+              {categoryFilter && (
+                <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
+                  <Badge className="bg-primary text-white py-1.5 px-4 rounded-full flex items-center gap-2 font-bold text-xs">
+                    Category: {categoryFilter}
+                    <X className="h-3 w-3 cursor-pointer" onClick={removeFilter} />
+                  </Badge>
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm">
                 <Filter className="h-4 w-4" /> Filter
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-10 px-5 font-bold text-xs">
+              <Button variant="outline" className="flex-1 md:flex-none rounded-full gap-2 border-secondary h-12 px-8 font-bold text-sm">
                 <SlidersHorizontal className="h-4 w-4" /> Sort
               </Button>
             </div>
           </div>
 
-          <div className="relative w-full md:max-w-md group mx-auto md:mx-0">
+          <div className="relative w-full max-w-md group mx-auto md:mx-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
-              placeholder="Search products..." 
-              className="pl-11 h-12 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-sm"
+              placeholder="Search items..." 
+              className="pl-12 h-14 rounded-full bg-secondary/30 border-none focus-visible:ring-primary/50 text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
           {products.map((product, index) => {
             const isLast = products.length === index + 1;
             return (
@@ -135,13 +159,13 @@ export default function ProductsPage() {
 
           {isLoading && [...Array(4)].map((_, i) => (
             <div key={i} className="space-y-4">
-              <Skeleton className="aspect-square rounded-2xl w-full" />
+              <Skeleton className="aspect-square rounded-[2rem] w-full" />
               <div className="space-y-3 px-1">
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-6 w-3/4" />
                 <div className="flex justify-between items-center pt-2">
                   <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-9 w-20 rounded-full" />
+                  <Skeleton className="h-10 w-24 rounded-full" />
                 </div>
               </div>
             </div>
@@ -149,24 +173,25 @@ export default function ProductsPage() {
         </div>
 
         {!isLoading && products.length === 0 && (
-          <div className="py-20 text-center text-muted-foreground bg-secondary/10 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center p-6">
-            <Search className="h-10 w-10 mb-4 opacity-20" />
-            <p className="text-lg md:text-xl font-headline italic">No products found. Please check back later.</p>
+          <div className="py-24 text-center text-muted-foreground bg-secondary/10 rounded-[3rem] border-2 border-dashed flex flex-col items-center justify-center p-8">
+            <Search className="h-12 w-12 mb-6 opacity-20" />
+            <p className="text-xl font-headline italic">No products found for this criteria.</p>
+            <Button variant="link" onClick={removeFilter} className="mt-4 font-bold text-primary">Clear all filters</Button>
           </div>
         )}
 
         {isLoading && products.length > 0 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex items-center gap-2 text-primary animate-pulse font-bold">
-              <span>Loading more...</span>
+          <div className="flex justify-center mt-16">
+            <div className="flex items-center gap-3 text-primary animate-pulse font-bold text-lg">
+              <span>Finding more items...</span>
             </div>
           </div>
         )}
 
         {!hasMore && products.length > 0 && (
-          <div className="mt-16 text-center py-12 border-t border-secondary/50">
-            <p className="text-muted-foreground font-headline text-base italic">
-              You've reached the end of the collection.
+          <div className="mt-20 text-center py-16 border-t border-secondary/50">
+            <p className="text-muted-foreground font-headline text-lg italic">
+              You've explored the entire collection.
             </p>
           </div>
         )}

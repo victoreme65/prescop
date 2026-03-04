@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -6,8 +5,16 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export const metadata: Metadata = {
-  title: 'Prescop | Premier Beauty Marketplace',
-  description: 'Your destination for luxury beauty and cosmetics in Nigeria.',
+  title: 'Prescop | Premier Beauty Marketplace Nigeria',
+  description: 'Shop luxury skincare, makeup, and fragrances from trusted vendors. The ultimate destination for modern African beauty.',
+  openGraph: {
+    title: 'Prescop | Premier Beauty Marketplace Nigeria',
+    description: 'Shop luxury skincare, makeup, and fragrances from trusted vendors.',
+    url: 'https://prescop.com',
+    siteName: 'Prescop',
+    locale: 'en_NG',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
