@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -12,10 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeProductReviews } from '@/ai/flows/summarize-product-reviews-flow';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/context/cart-context';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const product = MOCK_PRODUCTS.find(p => p.id === params.id) || MOCK_PRODUCTS[0];
   
   const [activeImage, setActiveImage] = useState(product.images?.[0] || product.imageUrls?.[0]);
@@ -37,10 +40,11 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleAddToCart = () => {
+  const onAddToCart = () => {
+    addToCart(product);
     toast({
       title: "Added to Bag",
-      description: `${product.title} is waiting for you in your shopping bag.`,
+      description: `${product.title} has been added to your shopping bag.`,
     });
   };
 
@@ -52,7 +56,6 @@ export default function ProductDetailPage() {
       
       <main className="flex-1 container mx-auto px-4 py-8 md:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 mb-24">
-          {/* GALLERY */}
           <div className="space-y-6">
             <div className="relative aspect-square rounded-[3rem] overflow-hidden bg-secondary/30 border shadow-inner group">
               <Image 
@@ -76,7 +79,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* PRODUCT INFO */}
           <div className="flex flex-col justify-center">
             <div className="mb-8 flex flex-wrap items-center gap-4">
               <Badge variant="secondary" className="bg-primary/10 text-primary px-6 py-2 font-bold uppercase text-xs tracking-widest border-none rounded-full">
@@ -105,7 +107,7 @@ export default function ProductDetailPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-16">
-              <Button onClick={handleAddToCart} size="lg" className="flex-1 rounded-full h-16 bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3 hover:scale-[1.02] transition-transform">
+              <Button onClick={onAddToCart} size="lg" className="flex-1 rounded-full h-16 bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3 hover:scale-[1.02] transition-transform">
                 <ShoppingCart className="h-6 w-6" /> Add to Shopping Bag
               </Button>
               <div className="flex gap-4">
@@ -135,7 +137,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* TABS SECTION */}
         <div className="bg-white rounded-[4rem] p-8 md:p-20 border shadow-sm">
           <Tabs defaultValue="details">
             <TabsList className="bg-transparent border-b rounded-none w-full justify-start gap-12 h-auto p-0 mb-12 overflow-x-auto scrollbar-hide">

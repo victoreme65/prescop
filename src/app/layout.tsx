@@ -1,8 +1,10 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { CartProvider } from "@/context/cart-context";
 
 export const metadata: Metadata = {
   title: 'Prescop | Premium Beauty Marketplace Nigeria',
@@ -37,15 +39,17 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen bg-background">
         <FirebaseClientProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <CartProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </CartProvider>
         </FirebaseClientProvider>
       </body>
     </html>

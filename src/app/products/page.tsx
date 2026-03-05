@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
@@ -51,6 +52,8 @@ function ProductsContent() {
         limit(PRODUCTS_PER_PAGE)
       );
 
+      // Note: This combination (where + orderBy) requires a composite index.
+      // Click the link in the console error to create it.
       if (categoryFilter) {
         q = query(q, where('categoryId', '==', categoryFilter));
       }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -6,17 +7,29 @@ import { Star, Heart, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/context/cart-context';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+  
   const rating = product.rating || product.averageRating || 4.5;
-  const numReviews = product.numReviews || product.reviewCount || 0;
-  const price = product.price || 0;
   const displayImage = product.images?.[0] || product.imageUrls?.[0] || 'https://picsum.photos/seed/placeholder/600/600';
+
+  const onAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+    toast({
+      title: "Added to Bag",
+      description: `${product.title} is now in your shopping bag.`,
+    });
+  };
 
   return (
     <Card className="group overflow-hidden rounded-[2.5rem] border-none shadow-sm transition-all hover:shadow-xl bg-card flex flex-col h-full">
@@ -61,9 +74,13 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/50">
           <span className="text-lg font-bold text-primary">
-            ₦{price.toLocaleString()}
+            ₦{(product.price || 0).toLocaleString()}
           </span>
-          <Button size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+          <Button 
+            size="icon" 
+            className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+            onClick={onAddToCart}
+          >
             <ShoppingCart className="h-4 w-4" />
           </Button>
         </div>

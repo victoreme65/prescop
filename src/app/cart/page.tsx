@@ -1,30 +1,17 @@
+
 'use client';
 
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useCart } from '@/context/cart-context';
 
 export default function CartPage() {
-  // Corrected property mapping for images
-  const cartItems = [
-    { 
-      ...MOCK_PRODUCTS[0], 
-      quantity: 1, 
-      displayImage: MOCK_PRODUCTS[0].images?.[0] || MOCK_PRODUCTS[0].imageUrls?.[0] 
-    },
-    { 
-      ...MOCK_PRODUCTS[1], 
-      quantity: 2, 
-      displayImage: MOCK_PRODUCTS[1].images?.[0] || MOCK_PRODUCTS[1].imageUrls?.[0] 
-    },
-  ];
-
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
-  const shipping = 2500;
+  const { cart, removeFromCart, updateQuantity, subtotal } = useCart();
+  const shipping = cart.length > 0 ? 2500 : 0;
   const total = subtotal + shipping;
 
   return (
@@ -36,11 +23,11 @@ export default function CartPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-6">
-            {cartItems.length > 0 ? (
-              cartItems.map((item) => (
+            {cart.length > 0 ? (
+              cart.map((item) => (
                 <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-6 bg-white rounded-[3rem] border shadow-sm hover:shadow-md transition-shadow">
                   <div className="relative aspect-square sm:h-48 sm:w-48 rounded-[2rem] overflow-hidden bg-secondary/30">
-                    <Image src={item.displayImage || 'https://picsum.photos/seed/placeholder/400/400'} alt={item.title} fill className="object-cover" />
+                    <Image src={item.images?.[0] || item.imageUrls?.[0] || 'https://picsum.photos/seed/placeholder/400/400'} alt={item.title} fill className="object-cover" />
                   </div>
                   
                   <div className="flex-1 flex flex-col justify-between py-2">
@@ -55,11 +42,30 @@ export default function CartPage() {
 
                     <div className="flex items-center justify-between mt-10">
                       <div className="flex items-center border rounded-full overflow-hidden bg-secondary/20 h-12">
-                        <Button variant="ghost" size="icon" className="h-full w-12 rounded-none hover:bg-primary/10"><Minus className="h-4 w-4" /></Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-full w-12 rounded-none hover:bg-primary/10"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
                         <span className="px-6 text-base font-bold w-12 text-center">{item.quantity}</span>
-                        <Button variant="ghost" size="icon" className="h-full w-12 rounded-none hover:bg-primary/10"><Plus className="h-4 w-4" /></Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-full w-12 rounded-none hover:bg-primary/10"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-destructive font-bold gap-2 text-xs uppercase h-12 px-8 rounded-full hover:bg-destructive/10">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive font-bold gap-2 text-xs uppercase h-12 px-8 rounded-full hover:bg-destructive/10"
+                        onClick={() => removeFromCart(item.id)}
+                      >
                         <Trash2 className="h-4 w-4" /> Remove
                       </Button>
                     </div>
@@ -105,7 +111,7 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <Button className="w-full h-16 rounded-full bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3">
+              <Button disabled={cart.length === 0} className="w-full h-16 rounded-full bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3">
                 Secure Checkout <ArrowRight className="h-6 w-6" />
               </Button>
               
