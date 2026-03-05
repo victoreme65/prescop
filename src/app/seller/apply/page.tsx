@@ -9,14 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { collection, serverTimestamp, doc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, TrendingUp, Wallet, ArrowRight, Upload } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Wallet, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function BecomeSellerPage() {
   const { toast } = useToast();
   const db = useFirestore();
+  const { user } = useUser();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -31,37 +35,38 @@ export default function BecomeSellerPage() {
     agreement: false
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Login Required', description: 'Please sign in to apply as a seller.' });
+      router.push('/login');
+      return;
+    }
     if (!formData.agreement) {
       toast({ variant: 'destructive', title: 'Action Required', description: 'Please agree to the Terms & Conditions.' });
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, 'sellerApplications'), {
-        ...formData,
-        status: 'pending',
-        applicationDate: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
+    
+    // Each user gets their own seller profile record
+    const sellerProfilesRef = collection(db, 'users', user.uid, 'sellerProfiles');
+    
+    addDocumentNonBlocking(sellerProfilesRef, {
+      ...formData,
+      userId: user.uid,
+      status: 'pending',
+      applicationDate: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }).then(() => {
       toast({
         title: 'Application Submitted!',
         description: "We've received your application. Our team will review it within 48 hours.",
       });
-      
-      setFormData({
-        fullName: '', businessName: '', email: '', phone: '', country: 'Nigeria',
-        bankName: '', accountNumber: '', accountName: '', description: '', agreement: false
-      });
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Submission Error', description: 'Something went wrong. Please try again later.' });
-    } finally {
       setIsSubmitting(false);
-    }
+      router.push('/seller/dashboard');
+    });
   };
 
   return (
@@ -157,14 +162,6 @@ export default function BecomeSellerPage() {
                     <div className="space-y-2">
                       <Label htmlFor="description" className="font-bold text-xs uppercase tracking-widest opacity-60">Business Description</Label>
                       <Textarea id="description" placeholder="Briefly describe what you sell (Brands, categories...)" className="min-h-[120px] rounded-2xl" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-                    </div>
-
-                    <div className="space-y-4">
-                      <Label className="font-bold text-xs uppercase tracking-widest opacity-60">ID Verification</Label>
-                      <div className="border-2 border-dashed border-secondary rounded-2xl p-8 flex flex-col items-center justify-center gap-4 text-muted-foreground hover:bg-secondary/10 transition-colors cursor-pointer">
-                        <Upload className="h-8 w-8" />
-                        <p className="text-sm font-bold">Click to upload Government Issued ID</p>
-                      </div>
                     </div>
 
                     <div className="flex items-start space-x-3">

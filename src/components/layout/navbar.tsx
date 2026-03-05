@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, ShoppingBag, User, Menu, X, LayoutDashboard, LogOut, ChevronDown, Store } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, LayoutDashboard, LogOut, ChevronDown, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const { user } = useUser();
+  const auth = useAuth();
   const cartCount = 2;
 
   useEffect(() => {
@@ -29,6 +33,10 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
 
   return (
     <nav className={cn(
@@ -68,21 +76,34 @@ export function Navbar() {
           </Link>
 
           <div className="hidden sm:block">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border border-secondary p-0 overflow-hidden hover:border-primary/50 transition-colors">
-                  <User className="h-5 w-5 text-primary" />
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border border-secondary p-0 overflow-hidden hover:border-primary/50 transition-colors">
+                    <User className="h-5 w-5 text-primary" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 p-3 rounded-[2rem] shadow-2xl border-secondary">
+                  <DropdownMenuLabel className="font-headline font-bold text-2xl mb-2 px-3">My Beauty</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link href="/profile" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/seller/dashboard" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive py-3 px-4 font-bold rounded-xl cursor-pointer">
+                    <LogOut className="h-4 w-4" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button asChild variant="ghost" className="rounded-full font-bold text-[10px] uppercase tracking-widest">
+                  <Link href="/login">Login</Link>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 p-3 rounded-[2rem] shadow-2xl border-secondary">
-                <DropdownMenuLabel className="font-headline font-bold text-2xl mb-2 px-3">My Beauty</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/profile" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><User className="h-4 w-4" /> Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/seller/dashboard" className="py-3 px-4 flex items-center gap-3 font-bold rounded-xl"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive py-3 px-4 font-bold rounded-xl"><LogOut className="h-4 w-4" /> Sign Out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <Button asChild className="rounded-full bg-primary text-white font-bold text-[10px] uppercase tracking-widest px-6 h-10 shadow-lg shadow-primary/20">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           <Sheet>
@@ -94,6 +115,7 @@ export function Navbar() {
             <SheetContent side="right" className="w-full sm:max-w-md p-8">
               <SheetHeader className="mb-12">
                 <SheetTitle className="font-headline text-4xl font-bold text-primary tracking-tighter text-left">PRESCOP</SheetTitle>
+                <SheetDescription className="sr-only">Mobile Navigation Menu</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-10">
                 <div className="flex flex-col gap-6">
@@ -105,10 +127,18 @@ export function Navbar() {
                 
                 <div className="flex flex-col gap-6 pt-10 border-t">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account</p>
-                  <div className="flex flex-col gap-4">
-                    <Link href="/profile" className="flex items-center gap-4 text-xl font-bold"><User className="h-6 w-6 text-primary" /> My Profile</Link>
-                    <Link href="/seller/dashboard" className="flex items-center gap-4 text-xl font-bold"><LayoutDashboard className="h-6 w-6 text-primary" /> Seller Dashboard</Link>
-                  </div>
+                  {user ? (
+                    <div className="flex flex-col gap-4">
+                      <Link href="/profile" className="flex items-center gap-4 text-xl font-bold"><User className="h-6 w-6 text-primary" /> My Profile</Link>
+                      <Link href="/seller/dashboard" className="flex items-center gap-4 text-xl font-bold"><LayoutDashboard className="h-6 w-6 text-primary" /> Seller Dashboard</Link>
+                      <button onClick={handleLogout} className="flex items-center gap-4 text-xl font-bold text-destructive"><LogOut className="h-6 w-6" /> Sign Out</button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <Link href="/login" className="flex items-center gap-4 text-xl font-bold">Login</Link>
+                      <Link href="/signup" className="flex items-center gap-4 text-xl font-bold text-primary">Sign Up</Link>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-auto">
