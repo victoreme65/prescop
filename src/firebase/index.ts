@@ -15,7 +15,17 @@ export function initializeFirebase() {
     if (getApps().length) {
       app = getApp();
     } else {
-      app = initializeApp(firebaseConfig);
+      // In SSR, we only attempt if we have a config, otherwise we return placeholders to avoid build bails.
+      if (firebaseConfig.apiKey) {
+        app = initializeApp(firebaseConfig);
+      } else {
+        // Return null-ish placeholders for server-side stability
+        return {
+          firebaseApp: null as any,
+          auth: null as any,
+          firestore: null as any
+        };
+      }
     }
     return getSdks(app);
   }
@@ -23,7 +33,7 @@ export function initializeFirebase() {
   if (!getApps().length) {
     let firebaseApp;
     try {
-      // Attempt automatic initialization (preferred for Firebase App Hosting)
+      // Attempt automatic initialization
       firebaseApp = initializeApp();
     } catch (e) {
       // Fallback to hardcoded config
@@ -36,6 +46,7 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  if (!firebaseApp) return { firebaseApp: null as any, auth: null as any, firestore: null as any };
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),

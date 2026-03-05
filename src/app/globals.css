@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* Refined high-contrast palette for Light Mode */
+    /* High-contrast palette for Premium Beauty Branding */
     --background: 30 40% 98%;
-    --foreground: 345 35% 10%; /* Darkened for better contrast */
+    --foreground: 345 35% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 345 35% 10%;
+    --card-foreground: 345 35% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 345 35% 10%;
-    --primary: 345 75% 35%; /* Deeper pink for 90+ accessibility */
+    --popover-foreground: 345 35% 8%;
+    --primary: 345 75% 32%; /* Deeper pink for high accessibility */
     --primary-foreground: 0 0% 100%;
     --secondary: 30 30% 92%;
-    --secondary-foreground: 345 30% 20%;
+    --secondary-foreground: 345 30% 15%;
     --muted: 30 20% 90%;
-    --muted-foreground: 345 15% 30%;
-    --accent: 315 65% 38%; /* High-contrast accent */
+    --muted-foreground: 345 15% 25%;
+    --accent: 315 65% 35%; 
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 50.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 345 15% 80%;
-    --input: 345 15% 80%;
-    --ring: 345 75% 35%;
+    --border: 345 15% 82%;
+    --input: 345 15% 82%;
+    --ring: 345 75% 32%;
     --radius: 1.5rem;
   }
 
@@ -42,8 +42,8 @@
     --muted-foreground: 345 10% 55%;
     --accent: 315 60% 55%;
     --accent-foreground: 345 10% 96%;
-    --border: 345 20% 14%;
-    --input: 345 20% 14%;
+    --border: 345 20% 16%;
+    --input: 345 20% 16%;
     --ring: 345 70% 60%;
   }
 }
@@ -54,5 +54,11 @@
   h1, h2, h3, h4, h5, h6 { @apply font-headline tracking-tighter leading-tight; }
 }
 
+/* Mobile Scrollbar Hide */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Accessible Touch Targets */
+button, a, input, select {
+  @apply min-h-[44px];
+}
