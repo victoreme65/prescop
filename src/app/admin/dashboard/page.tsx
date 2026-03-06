@@ -38,16 +38,18 @@ export default function AdminDashboard() {
 
   // Fetch Pending Seller Applications (using collectionGroup for ease)
   const pendingSellersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    // CRITICAL: Guard query to prevent permission error for non-admins
+    if (!db || !isAdmin) return null;
     return query(collectionGroup(db, 'sellerProfiles'), where('status', '==', 'pending'));
-  }, [db]);
+  }, [db, isAdmin]);
   const { data: pendingSellers } = useCollection(pendingSellersQuery);
 
   // Fetch All Orders
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    // CRITICAL: Guard query to prevent permission error for non-admins
+    if (!db || !isAdmin) return null;
     return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
-  }, [db]);
+  }, [db, isAdmin]);
   const { data: allOrders } = useCollection(allOrdersQuery);
 
   const handleApproveSeller = (userId: string, profileId: string) => {

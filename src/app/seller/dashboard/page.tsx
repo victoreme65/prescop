@@ -24,11 +24,15 @@ export default function SellerDashboard() {
   }, [db, user?.uid]);
   const { data: products } = useCollection(productsQuery);
 
-  // Fetch Seller's Orders (In a real app, you might have an 'orderItems' collection group or orders would have sellerIds)
+  // Fetch Seller's Orders
   const ordersQuery = useMemoFirebase(() => {
+    // CRITICAL: Prevent broad collectionGroup query without explicit permissions
     if (!db || !user?.uid) return null;
-    // Simulating fetching orders relevant to this seller
-    return query(collectionGroup(db, 'orders'));
+    
+    // In a real production app, we would have 'sellerId' on the order items
+    // and use: query(collectionGroup(db, 'orderItems'), where('sellerId', '==', user.uid))
+    // For now, we return null to avoid permission errors until the data model is fully scaled.
+    return null;
   }, [db, user?.uid]);
   const { data: orders } = useCollection(ordersQuery);
 
