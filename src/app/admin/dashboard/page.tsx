@@ -30,27 +30,28 @@ export default function AdminDashboardPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Stable memoized queries to prevent Firestore "Unexpected state (ID: ca9)" errors
+  // Guard all queries until db and auth are ready.
+  // Firing collectionGroup queries during an auth-redirect phase 
+  // is a common cause of Firestore "Unexpected state (ID: ca9)".
   const usersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return collection(db, 'users');
-  }, [db]);
+  }, [db, user]);
 
   const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return collection(db, 'products');
-  }, [db]);
+  }, [db, user]);
 
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    // Guarded to prevent broad collectionGroup search without indexes or auth readiness
+    if (!db || !user) return null;
     return collectionGroup(db, 'orders');
-  }, [db]);
+  }, [db, user]);
 
   const pendingSellersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collectionGroup(db, 'sellerProfiles'), limit(5));
-  }, [db]);
+  }, [db, user]);
 
   const { data: users } = useCollection(usersQuery);
   const { data: products } = useCollection(productsQuery);

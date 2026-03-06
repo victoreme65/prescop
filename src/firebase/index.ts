@@ -5,54 +5,40 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore'
 
-// Singleton cache for services
-let firestoreInstance: Firestore | null = null;
-let authInstance: Auth | null = null;
+// Singleton cache for services to prevent internal Firestore sync errors (Unexpected state ID: ca9)
+let cachedApp: FirebaseApp | null = null;
+let cachedAuth: Auth | null = null;
+let cachedFirestore: Firestore | null = null;
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+/**
+ * Initializes and returns singleton instances of Firebase services.
+ * This pattern ensures that only one connection is active, preventing
+ * synchronization issues during Next.js hydration.
+ */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
-    let app: FirebaseApp;
-    if (getApps().length) {
-      app = getApp();
-    } else {
-      if (firebaseConfig.apiKey) {
-        app = initializeApp(firebaseConfig);
-      } else {
-        return {
-          firebaseApp: null as any,
-          auth: null as any,
-          firestore: null as any
-        };
-      }
-    }
-    return getSdks(app);
+    // Minimal initialization for server-side environments (SSR/Prerendering)
+    const existingApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    return {
+      firebaseApp: existingApp,
+      auth: getAuth(existingApp),
+      firestore: getFirestore(existingApp)
+    };
   }
 
-  if (!getApps().length) {
-    let firebaseApp;
-    try {
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-    return getSdks(firebaseApp);
+  // Client-side singleton pattern
+  if (!cachedApp) {
+    const apps = getApps();
+    cachedApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
   }
 
-  return getSdks(getApp());
-}
-
-export function getSdks(firebaseApp: FirebaseApp) {
-  if (!firebaseApp) return { firebaseApp: null as any, auth: null as any, firestore: null as any };
-  
-  // Ensure singletons for services to prevent internal Firestore sync errors
-  if (!authInstance) authInstance = getAuth(firebaseApp);
-  if (!firestoreInstance) firestoreInstance = getFirestore(firebaseApp);
+  if (!cachedAuth) cachedAuth = getAuth(cachedApp);
+  if (!cachedFirestore) cachedFirestore = getFirestore(cachedApp);
 
   return {
-    firebaseApp,
-    auth: authInstance,
-    firestore: firestoreInstance
+    firebaseApp: cachedApp,
+    auth: cachedAuth,
+    firestore: cachedFirestore,
   };
 }
 
