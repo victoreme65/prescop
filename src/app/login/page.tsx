@@ -9,28 +9,55 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
 
+    setIsLoading(true);
+    setError(null);
+
     try {
-      initiateEmailSignIn(auth, email, password);
-      toast({ title: "Welcome back!", description: "Signing you in to Prescop." });
+      await initiateEmailSignIn(auth, email, password);
+      toast({ title: "Welcome back!", description: "Signed in successfully." });
       router.push('/');
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Login Failed", description: error.message });
+    } catch (err: any) {
+      console.error(err);
+      let message = "An unexpected error occurred. Please try again.";
+      
+      if (err.code === 'auth/invalid-credential') {
+        message = "Invalid email or password. Please check your credentials.";
+      } else if (err.code === 'auth/user-not-found') {
+        message = "No account found with this email.";
+      } else if (err.code === 'auth/wrong-password') {
+        message = "Incorrect password. Please try again.";
+      } else if (err.code === 'auth/too-many-requests') {
+        message = "Too many failed attempts. Please try again later.";
+      }
+
+      setError(message);
+      toast({ 
+        variant: "destructive", 
+        title: "Login Failed", 
+        description: message 
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -45,6 +72,14 @@ export default function LoginPage() {
             <CardDescription className="text-primary-foreground/80 text-lg italic">Sign in to your beauty sanctuary.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 md:p-12 bg-white">
+            {error && (
+              <Alert variant="destructive" className="mb-6 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-bold text-xs uppercase tracking-widest opacity-60">Email Address</Label>
@@ -58,6 +93,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -76,11 +112,20 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
+                    disabled={isLoading}
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3">
-                Sign In <ArrowRight className="h-5 w-5" />
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3"
+              >
+                {isLoading ? (
+                  <>Signing In <Loader2 className="h-5 w-5 animate-spin" /></>
+                ) : (
+                  <>Sign In <ArrowRight className="h-5 w-5" /></>
+                )}
               </Button>
             </form>
             <div className="mt-10 text-center">

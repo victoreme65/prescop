@@ -9,29 +9,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
 
+    setIsLoading(true);
+    setError(null);
+
     try {
-      initiateEmailSignUp(auth, email, password);
+      await initiateEmailSignUp(auth, email, password);
       toast({ title: "Account Created!", description: "Welcome to the Prescop beauty circle." });
       router.push('/');
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Signup Failed", description: error.message });
+    } catch (err: any) {
+      console.error(err);
+      let message = "An unexpected error occurred. Please try again.";
+      
+      if (err.code === 'auth/email-already-in-use') {
+        message = "An account with this email already exists.";
+      } else if (err.code === 'auth/weak-password') {
+        message = "Password is too weak. Please use at least 6 characters.";
+      } else if (err.code === 'auth/invalid-email') {
+        message = "Invalid email address format.";
+      }
+
+      setError(message);
+      toast({ 
+        variant: "destructive", 
+        title: "Signup Failed", 
+        description: message 
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -46,6 +71,14 @@ export default function SignupPage() {
             <CardDescription className="text-primary-foreground/80 text-lg italic">Discover the art of authentic beauty.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 md:p-12 bg-white">
+            {error && (
+              <Alert variant="destructive" className="mb-6 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSignup} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-bold text-xs uppercase tracking-widest opacity-60">Full Name</Label>
@@ -58,6 +91,7 @@ export default function SignupPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required 
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -73,6 +107,7 @@ export default function SignupPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -88,11 +123,20 @@ export default function SignupPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
+                    disabled={isLoading}
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3">
-                Create Account <ArrowRight className="h-5 w-5" />
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3"
+              >
+                {isLoading ? (
+                  <>Creating Account <Loader2 className="h-5 w-5 animate-spin" /></>
+                ) : (
+                  <>Create Account <ArrowRight className="h-5 w-5" /></>
+                )}
               </Button>
             </form>
             <div className="mt-10 text-center">
