@@ -1,11 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { useUser, useFirestore, useAuth } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Mail, ShoppingBag, MapPin, Settings, LogOut, ArrowRight, Package, Clock } from 'lucide-react';
+import { User, ShoppingBag, MapPin, Settings, LogOut, ArrowRight, Package, Clock } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +15,13 @@ export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    // Redirection must happen in useEffect to avoid "updating component while rendering" error
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -28,8 +36,8 @@ export default function ProfilePage() {
     );
   }
 
+  // Prevent rendering the profile content if not logged in
   if (!user) {
-    router.push('/login');
     return null;
   }
 
