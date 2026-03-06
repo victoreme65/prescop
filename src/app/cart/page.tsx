@@ -1,18 +1,78 @@
-
 'use client';
 
+import { useState } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ShieldCheck, Truck, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, subtotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart();
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
   const shipping = cart.length > 0 ? 2500 : 0;
   const total = subtotal + shipping;
+
+  const handleCheckout = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to complete your purchase.",
+      });
+      router.push('/login');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    const orderData = {
+      customerId: user.uid,
+      customerEmail: user.email,
+      items: cart.map(item => ({
+        productId: item.id,
+        title: item.title,
+        quantity: item.quantity,
+        price: item.price,
+        imageUrl: item.imageUrls?.[0] || item.images?.[0] || '',
+      })),
+      totalAmount: total,
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: serverTimestamp(),
+    };
+
+    const ordersRef = collection(db, 'users', user.uid, 'orders');
+    
+    addDocumentNonBlocking(ordersRef, orderData)
+      .then(() => {
+        toast({
+          title: "Order Placed!",
+          description: "Your beauty essentials are being prepared for delivery.",
+        });
+        clearCart();
+        router.push('/profile');
+      })
+      .catch((err) => {
+        console.error(err);
+        toast({
+          variant: "destructive",
+          title: "Checkout Failed",
+          description: "Something went wrong while processing your order.",
+        });
+      })
+      .finally(() => setIsCheckingOut(false));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -24,54 +84,61 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-6">
             {cart.length > 0 ? (
-              cart.map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-6 bg-white rounded-[3rem] border shadow-sm hover:shadow-md transition-shadow">
-                  <div className="relative aspect-square sm:h-48 sm:w-48 rounded-[2rem] overflow-hidden bg-secondary/30">
-                    <Image src={item.images?.[0] || item.imageUrls?.[0] || 'https://picsum.photos/seed/placeholder/400/400'} alt={item.title} fill className="object-cover" />
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col justify-between py-2">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-primary uppercase font-bold tracking-[0.2em]">{item.category}</p>
-                        <h3 className="font-headline text-3xl font-bold line-clamp-1 leading-tight">{item.title}</h3>
-                        <p className="text-[10px] text-muted-foreground italic font-bold uppercase tracking-widest">Verified Vendor</p>
-                      </div>
-                      <p className="font-bold text-2xl text-primary tracking-tighter">₦{((item.price || 0) * item.quantity).toLocaleString()}</p>
+              <>
+                {cart.map((item) => (
+                  <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-6 bg-white rounded-[3rem] border shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative aspect-square sm:h-48 sm:w-48 rounded-[2rem] overflow-hidden bg-secondary/30">
+                      <Image src={item.imageUrls?.[0] || item.images?.[0] || 'https://picsum.photos/seed/placeholder/400/400'} alt={item.title} fill className="object-cover" />
                     </div>
+                    
+                    <div className="flex-1 flex flex-col justify-between py-2">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-primary uppercase font-bold tracking-[0.2em]">{item.category}</p>
+                          <h3 className="font-headline text-3xl font-bold line-clamp-1 leading-tight">{item.title}</h3>
+                          <p className="text-[10px] text-muted-foreground italic font-bold uppercase tracking-widest">Verified Vendor</p>
+                        </div>
+                        <p className="font-bold text-2xl text-primary tracking-tighter">₦{((item.price || 0) * item.quantity).toLocaleString()}</p>
+                      </div>
 
-                    <div className="flex items-center justify-between mt-10">
-                      <div className="flex items-center border rounded-full overflow-hidden bg-secondary/20 h-12">
+                      <div className="flex items-center justify-between mt-10">
+                        <div className="flex items-center border rounded-full overflow-hidden bg-secondary/20 h-12">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-full w-12 rounded-none hover:bg-primary/10"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="px-6 text-base font-bold w-12 text-center">{item.quantity}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-full w-12 rounded-none hover:bg-primary/10"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <Button 
                           variant="ghost" 
-                          size="icon" 
-                          className="h-full w-12 rounded-none hover:bg-primary/10"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          size="sm" 
+                          className="text-destructive font-bold gap-2 text-xs uppercase h-12 px-8 rounded-full hover:bg-destructive/10"
+                          onClick={() => removeFromCart(item.id)}
                         >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="px-6 text-base font-bold w-12 text-center">{item.quantity}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-full w-12 rounded-none hover:bg-primary/10"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" /> Remove
                         </Button>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-destructive font-bold gap-2 text-xs uppercase h-12 px-8 rounded-full hover:bg-destructive/10"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" /> Remove
-                      </Button>
                     </div>
                   </div>
+                ))}
+                <div className="flex justify-end pt-4">
+                   <Button variant="ghost" onClick={clearCart} className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] hover:text-destructive">
+                      Clear Shopping Bag
+                   </Button>
                 </div>
-              ))
+              </>
             ) : (
               <div className="text-center py-24 bg-secondary/10 rounded-[3rem] border-2 border-dashed border-primary/20">
                 <ShoppingBag className="h-20 w-20 mx-auto mb-6 text-primary opacity-20" />
@@ -111,8 +178,16 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <Button disabled={cart.length === 0} className="w-full h-16 rounded-full bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3">
-                Secure Checkout <ArrowRight className="h-6 w-6" />
+              <Button 
+                disabled={cart.length === 0 || isCheckingOut} 
+                className="w-full h-16 rounded-full bg-primary text-white font-bold text-xl shadow-2xl shadow-primary/20 gap-3"
+                onClick={handleCheckout}
+              >
+                {isCheckingOut ? (
+                   <>Processing <Loader2 className="h-6 w-6 animate-spin" /></>
+                ) : (
+                   <>Secure Checkout <ArrowRight className="h-6 w-6" /></>
+                )}
               </Button>
               
               <p className="text-center text-[10px] text-muted-foreground mt-10 uppercase tracking-widest font-bold">

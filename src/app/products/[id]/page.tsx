@@ -1,43 +1,108 @@
-
 'use client';
 
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { MOCK_PRODUCTS, MOCK_REVIEWS } from '@/lib/mock-data';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { Star, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, Sparkles, Share2 } from 'lucide-react';
+import { Star, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, Sparkles, Share2, MessageSquare, Send } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeProductReviews } from '@/ai/flows/summarize-product-reviews-flow';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/context/cart-context';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { toast } = useToast();
   const { addToCart } = useCart();
+  const { user } = useUser();
+  const db = useFirestore();
+  
   const product = MOCK_PRODUCTS.find(p => p.id === params.id) || MOCK_PRODUCTS[0];
   
   const [activeImage, setActiveImage] = useState(product.images?.[0] || product.imageUrls?.[0]);
   const [reviewSummary, setReviewSummary] = useState<string | null>(null);
   const [summarizing, setSummarizing] = useState(false);
+  
+  // Real Review State
+  const [newComment, setNewComment] = useState('');
+  const [newRating, setNewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Fetch Reviews from Firestore
+  const reviewsQuery = useMemoFirebase(() => {
+    if (!db || !product.id) return null;
+    return query(
+      collection(db, 'products', product.id, 'reviews'),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    );
+  }, [db, product.id]);
+
+  const { data: dbReviews, isLoading: isLoadingReviews } = useCollection(reviewsQuery);
 
   const handleSummarizeReviews = async () => {
+    const reviewsToSummarize = dbReviews?.length ? dbReviews : [];
+    if (!reviewsToSummarize.length) {
+      toast({ title: "No Reviews", description: "This product doesn't have any reviews to summarize yet." });
+      return;
+    }
+
     setSummarizing(true);
     try {
       const result = await summarizeProductReviews({
         productTitle: product.title,
-        reviews: MOCK_REVIEWS.map(r => ({ rating: r.rating, comment: r.comment }))
+        reviews: reviewsToSummarize.map(r => ({ rating: r.rating, comment: r.comment }))
       });
       setReviewSummary(result.summary);
     } catch (error) {
       console.error(error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to summarize reviews." });
     } finally {
       setSummarizing(false);
     }
+  };
+
+  const handlePostReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Authentication Required", description: "Please sign in to leave a review." });
+      return;
+    }
+    if (!newComment.trim()) return;
+
+    setIsSubmittingReview(true);
+    const reviewData = {
+      productId: product.id,
+      userId: user.uid,
+      userName: user.displayName || 'Anonymous User',
+      rating: newRating,
+      comment: newComment,
+      createdAt: serverTimestamp(),
+      isApproved: true,
+    };
+
+    const reviewsRef = collection(db, 'products', product.id, 'reviews');
+    
+    addDocumentNonBlocking(reviewsRef, reviewData)
+      .then(() => {
+        toast({ title: "Review Posted!", description: "Thank you for sharing your experience." });
+        setNewComment('');
+        setNewRating(5);
+      })
+      .catch(() => {
+        toast({ variant: "destructive", title: "Error", description: "Could not post your review." });
+      })
+      .finally(() => setIsSubmittingReview(false));
   };
 
   const onAddToCart = () => {
@@ -141,7 +206,7 @@ export default function ProductDetailPage() {
           <Tabs defaultValue="details">
             <TabsList className="bg-transparent border-b rounded-none w-full justify-start gap-12 h-auto p-0 mb-12 overflow-x-auto scrollbar-hide">
               <TabsTrigger value="details" className="data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none px-0 py-6 text-2xl font-headline font-bold transition-all opacity-60 data-[state=active]:opacity-100">Product Details</TabsTrigger>
-              <TabsTrigger value="reviews" className="data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none px-0 py-6 text-2xl font-headline font-bold transition-all opacity-60 data-[state=active]:opacity-100">Verified Reviews ({product.numReviews || 0})</TabsTrigger>
+              <TabsTrigger value="reviews" className="data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none px-0 py-6 text-2xl font-headline font-bold transition-all opacity-60 data-[state=active]:opacity-100">Verified Reviews ({dbReviews?.length || 0})</TabsTrigger>
               <TabsTrigger value="usage" className="data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none px-0 py-6 text-2xl font-headline font-bold transition-all opacity-60 data-[state=active]:opacity-100">How to Use</TabsTrigger>
             </TabsList>
             
@@ -166,6 +231,7 @@ export default function ProductDetailPage() {
 
             <TabsContent value="reviews">
               <div className="space-y-16">
+                {/* AI Summary Section */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10 p-12 bg-primary/5 rounded-[3rem] border border-primary/10 shadow-inner">
                   <div className="max-w-md">
                     <h4 className="font-headline font-bold text-4xl mb-3">Beauty Insights</h4>
@@ -182,31 +248,82 @@ export default function ProductDetailPage() {
                   )}
                 </div>
 
-                <div className="grid gap-12">
-                  {MOCK_REVIEWS.map((review) => (
-                    <div key={review.id} className="border-b border-secondary/50 pb-12 last:border-0">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-5">
-                          <div className="h-16 w-16 rounded-[1.25rem] bg-secondary/50 flex items-center justify-center font-bold text-primary text-2xl shadow-inner">
-                            {review.userName.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-3">
-                              <p className="font-bold text-xl">{review.userName}</p>
-                              <Badge className="text-[10px] bg-green-100 text-green-700 border-none px-3 py-0.5 rounded-full font-bold">VERIFIED PURCHASE</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-bold">{review.createdAt}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-5 w-5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
-                          ))}
-                        </div>
+                {/* Submit Review Section */}
+                {user ? (
+                   <div className="p-12 bg-white rounded-[3rem] border shadow-sm space-y-8">
+                      <div className="flex items-center gap-4">
+                        <MessageSquare className="h-8 w-8 text-primary" />
+                        <h4 className="font-headline font-bold text-3xl">Leave a Review</h4>
                       </div>
-                      <p className="font-body text-2xl text-muted-foreground italic leading-relaxed pl-2 border-l-4 border-primary/10">"{review.comment}"</p>
+                      <form onSubmit={handlePostReview} className="space-y-6">
+                         <div className="flex items-center gap-2">
+                           <span className="text-sm font-bold text-muted-foreground mr-4">Your Rating:</span>
+                           {[1, 2, 3, 4, 5].map((star) => (
+                             <button
+                               key={star}
+                               type="button"
+                               onClick={() => setNewRating(star)}
+                               className="p-1"
+                             >
+                               <Star className={`h-8 w-8 ${star <= newRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+                             </button>
+                           ))}
+                         </div>
+                         <Textarea 
+                            placeholder="Share your experience with this beauty essential..." 
+                            className="min-h-[120px] rounded-2xl border-secondary text-lg"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            required
+                         />
+                         <Button type="submit" disabled={isSubmittingReview} className="rounded-full bg-primary h-14 px-10 font-bold gap-3 shadow-lg shadow-primary/10">
+                            {isSubmittingReview ? 'Posting...' : 'Post Verified Review'} <Send className="h-5 w-5" />
+                         </Button>
+                      </form>
+                   </div>
+                ) : (
+                   <div className="p-10 text-center bg-secondary/10 rounded-[3rem] border-2 border-dashed border-primary/10">
+                      <p className="font-bold text-xl italic mb-4">Want to share your thoughts?</p>
+                      <Button asChild variant="outline" className="rounded-full px-8 h-12 border-primary/20"><a href="/login">Sign in to leave a review</a></Button>
+                   </div>
+                )}
+
+                {/* Reviews List */}
+                <div className="grid gap-12">
+                  {isLoadingReviews ? (
+                     [...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-3xl w-full" />)
+                  ) : dbReviews && dbReviews.length > 0 ? (
+                    dbReviews.map((review) => (
+                      <div key={review.id} className="border-b border-secondary/50 pb-12 last:border-0">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-5">
+                            <div className="h-16 w-16 rounded-[1.25rem] bg-secondary/50 flex items-center justify-center font-bold text-primary text-2xl shadow-inner">
+                              {review.userName.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-3">
+                                <p className="font-bold text-xl">{review.userName}</p>
+                                <Badge className="text-[10px] bg-green-100 text-green-700 border-none px-3 py-0.5 rounded-full font-bold">VERIFIED PURCHASE</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-bold">
+                                {review.createdAt?.toDate ? format(review.createdAt.toDate(), 'MMM dd, yyyy') : 'Recent'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-5 w-5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="font-body text-2xl text-muted-foreground italic leading-relaxed pl-2 border-l-4 border-primary/10">"{review.comment}"</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-20 text-center text-muted-foreground bg-secondary/5 rounded-[3rem]">
+                       <p className="text-xl italic">No reviews yet. Be the first to share your thoughts!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </TabsContent>

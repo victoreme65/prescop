@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { useUser } from '@/firebase';
 
 export default function SellerDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useUser();
 
   const sidebarItems = [
     { title: 'Overview', href: '/seller/dashboard', icon: LayoutDashboard },
@@ -38,7 +40,6 @@ export default function SellerDashboard() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-72">
-            {/* Accessibility Fix: Added Title & Description */}
             <SheetHeader className="sr-only">
               <SheetTitle>Seller Menu</SheetTitle>
               <SheetDescription>Navigate your seller dashboard</SheetDescription>
@@ -57,7 +58,7 @@ export default function SellerDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
           <div>
             <h1 className="font-headline text-3xl md:text-4xl font-bold">Dashboard Overview</h1>
-            <p className="text-muted-foreground italic">Welcome back to your store, Zainab.</p>
+            <p className="text-muted-foreground italic">Welcome back to your store, {user?.displayName || 'Merchant'}.</p>
           </div>
           <Button asChild className="bg-primary hover:bg-primary/90 rounded-full h-12 px-8 font-bold gap-2">
             <Link href="/seller/products/new">
@@ -69,8 +70,8 @@ export default function SellerDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
           {[
             { label: 'Total Earnings', val: '₦450.2k', icon: Wallet, color: 'text-primary' },
-            { label: 'Active Orders', val: '124', icon: ShoppingCart, color: 'text-blue-600' },
-            { label: 'Live Products', val: '18', icon: Package, color: 'text-green-600' },
+            { label: 'Active Orders', val: '12', icon: ShoppingCart, color: 'text-blue-600' },
+            { label: 'Live Products', val: '8', icon: Package, color: 'text-green-600' },
             { label: 'Store Rating', val: '4.8', icon: Star, color: 'text-yellow-500' },
           ].map((stat, i) => (
             <Card key={i} className="border-none shadow-sm rounded-[2rem]">
@@ -88,7 +89,7 @@ export default function SellerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="border-none shadow-sm rounded-[2.5rem]">
             <CardHeader>
-              <CardTitle className="text-xl font-bold">Recent Transactions</CardTitle>
+              <CardTitle className="text-xl font-bold">Recent Orders</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -103,11 +104,13 @@ export default function SellerDashboard() {
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">₦15,500 • Paid</p>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-none text-[8px] px-2 py-0">SHIPPED</Badge>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-none text-[8px] px-2 py-0">PROCESSING</Badge>
                   </div>
                 ))}
               </div>
-              <Button variant="link" className="w-full mt-6 text-primary font-bold">View Order History</Button>
+              <Button asChild variant="link" className="w-full mt-6 text-primary font-bold">
+                 <Link href="/seller/orders">View All Orders</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -118,7 +121,7 @@ export default function SellerDashboard() {
             <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
               <div className="text-center italic space-y-4">
                 <BarChart3 className="h-16 w-16 mx-auto opacity-20" />
-                <p className="text-sm">Store traffic analytics will appear here soon.</p>
+                <p className="text-sm">Store traffic analytics will appear here once verified.</p>
               </div>
             </CardContent>
           </Card>

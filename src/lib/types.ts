@@ -20,7 +20,7 @@ export interface Product {
   categoryId: string;
   category?: string;
   imageUrls: string[];
-  images?: string[]; // Handle legacy property
+  images?: string[]; 
   stock: number;
   rating?: number;
   averageRating?: number;
@@ -38,28 +38,27 @@ export interface Review {
   userName: string;
   rating: number;
   comment: string;
-  createdAt: string;
+  createdAt: any;
 }
 
 export interface OrderItem {
   id: string;
-  orderId: string;
   productId: string;
-  sellerId: string;
+  title: string;
   quantity: number;
-  priceAtOrder: number;
-  displayImage?: string;
+  price: number;
+  imageUrl: string;
 }
 
 export interface Order {
   id: string;
   customerId: string;
-  shippingAddress: string;
+  customerEmail: string;
+  items: OrderItem[];
   totalAmount: number;
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  orderStatus: 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  orderDate: string;
-  createdAt: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  createdAt: any;
 }
 
 export interface Testimonial {
