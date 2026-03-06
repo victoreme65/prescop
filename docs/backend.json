@@ -12,6 +12,7 @@
         "lastName": { "type": "string" },
         "phone": { "type": "string" },
         "role": { "type": "string", "enum": ["customer", "seller", "admin"] },
+        "status": { "type": "string", "enum": ["active", "banned"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -59,10 +60,11 @@
       "properties": {
         "id": { "type": "string" },
         "customerId": { "type": "string" },
+        "customerEmail": { "type": "string" },
         "items": { "type": "array" },
         "totalAmount": { "type": "number" },
         "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed"] },
-        "deliveryStatus": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
+        "deliveryStatus": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
         "shippingAddress": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
@@ -75,31 +77,42 @@
         "id": { "type": "string" },
         "productId": { "type": "string" },
         "userId": { "type": "string" },
+        "userName": { "type": "string" },
         "rating": { "type": "number" },
         "comment": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["productId", "userId", "rating", "comment", "createdAt"]
     },
-    "NewsletterSubscription": {
-      "title": "NewsletterSubscription",
+    "Category": {
+      "title": "Category",
       "type": "object",
       "properties": {
-        "email": { "type": "string", "format": "email" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["email", "createdAt"]
-    },
-    "ContactMessage": {
-      "title": "ContactMessage",
-      "type": "object",
-      "properties": {
+        "id": { "type": "string" },
         "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "email", "message", "createdAt"]
+        "imageUrl": { "type": "string" },
+        "count": { "type": "string" }
+      }
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "text": { "type": "string" },
+        "isApproved": { "type": "boolean" }
+      }
+    },
+    "GlobalSettings": {
+      "title": "GlobalSettings",
+      "type": "object",
+      "properties": {
+        "commissionRate": { "type": "number" },
+        "payoutThreshold": { "type": "number" },
+        "autoApproveVendors": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -114,7 +127,10 @@
       { "path": "/users/{userId}/orders/{orderId}", "definition": { "entityName": "Order" } },
       { "path": "/newsletterSubscriptions/{id}", "definition": { "entityName": "NewsletterSubscription" } },
       { "path": "/contactMessages/{id}", "definition": { "entityName": "ContactMessage" } },
-      { "path": "/roles_admin/{adminId}", "definition": { "entityName": "User" } }
+      { "path": "/roles_admin/{adminId}", "definition": { "entityName": "User" } },
+      { "path": "/categories/{id}", "definition": { "entityName": "Category" } },
+      { "path": "/testimonials/{id}", "definition": { "entityName": "Testimonial" } },
+      { "path": "/settings/global", "definition": { "entityName": "GlobalSettings" } }
     ]
   }
 }

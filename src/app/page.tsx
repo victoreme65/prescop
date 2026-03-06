@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ShieldCheck, Star, BadgeCheck, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { addDoc, collection, serverTimestamp, query, where, limit } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, limit, orderBy } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ export default function Home() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // 1. Fetch Featured Products from Live Database
+  // 1. Fetch Featured Products
   const featuredQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -30,8 +31,21 @@ export default function Home() {
       limit(4)
     );
   }, [db]);
-
   const { data: featuredProducts, isLoading: isProductsLoading } = useCollection(featuredQuery);
+
+  // 2. Fetch Categories
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'categories');
+  }, [db]);
+  const { data: categories, isLoading: isCategoriesLoading } = useCollection(categoriesQuery);
+
+  // 3. Fetch Testimonials
+  const testimonialsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'testimonials'), where('isApproved', '==', true), limit(3));
+  }, [db]);
+  const { data: testimonials, isLoading: isTestimonialsLoading } = useCollection(testimonialsQuery);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +65,6 @@ export default function Home() {
       toast({ variant: "destructive", title: "Oops!", description: "Subscription failed." });
     }).finally(() => setIsSubscribing(false));
   };
-
-  const categories = [
-    { name: 'Skincare', count: '450+', image: 'https://picsum.photos/seed/cat-skin/600/600' },
-    { name: 'Makeup', count: '320+', image: 'https://picsum.photos/seed/cat-make/600/600' },
-    { name: 'Fragrance', count: '180+', image: 'https://picsum.photos/seed/cat-frag/600/600' },
-    { name: 'Tools', count: '120+', image: 'https://picsum.photos/seed/cat-tool/600/600' },
-  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -110,23 +117,29 @@ export default function Home() {
             </div>
             
             <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x md:grid md:grid-cols-4">
-              {categories.map((cat, i) => (
-                <Link key={i} href={`/products?category=${cat.name}`} className="min-w-[240px] md:min-w-0 snap-center group">
-                  <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-4 border shadow-sm">
-                    <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <div className="absolute bottom-6 left-6 text-white">
-                      <p className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-80">{cat.count} Items</p>
-                      <h3 className="font-headline text-2xl font-bold">{cat.name}</h3>
+              {isCategoriesLoading ? (
+                [...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-[4/5] rounded-[2.5rem]" />)
+              ) : categories && categories.length > 0 ? (
+                categories.map((cat: any) => (
+                  <Link key={cat.id} href={`/products?category=${cat.name}`} className="min-w-[240px] md:min-w-0 snap-center group">
+                    <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-4 border shadow-sm">
+                      <Image src={cat.imageUrl || 'https://picsum.photos/seed/placeholder/600/600'} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <div className="absolute bottom-6 left-6 text-white">
+                        <p className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-80">{cat.count || '0+'} Items</p>
+                        <h3 className="font-headline text-2xl font-bold">{cat.name}</h3>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-full py-10 text-center italic text-muted-foreground">Discover beauty through our diverse categories.</div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* FEATURED PRODUCTS - LIVE FEED */}
+        {/* FEATURED PRODUCTS */}
         <section className="py-16 md:py-32">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -161,29 +174,31 @@ export default function Home() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="font-headline text-3xl md:text-5xl font-bold mb-16 tracking-tight">Community Love</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-              {[
-                { name: 'Amaka O.', city: 'Lagos', text: 'Prescop is my go-to for authentic serums. The delivery is always on time!' },
-                { name: 'Zainab M.', city: 'Abuja', text: 'I love that I can find all my favorite international brands in one place.' },
-                { name: 'Chioma K.', city: 'Enugu', text: 'The seller verification gives me peace of mind. No more worrying about fakes.' },
-              ].map((t, i) => (
-                <div key={i} className="p-8 bg-white rounded-[2rem] border shadow-sm">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => <Star key={j} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
-                  </div>
-                  <p className="text-muted-foreground mb-6 italic leading-relaxed text-lg">"{t.text}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                      {t.name.charAt(0)}
+              {isTestimonialsLoading ? (
+                [...Array(3)].map((_, i) => <Skeleton key={i} className="h-64 rounded-[2rem]" />)
+              ) : testimonials && testimonials.length > 0 ? (
+                testimonials.map((t: any) => (
+                  <div key={t.id} className="p-8 bg-white rounded-[2rem] border shadow-sm">
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(5)].map((_, j) => <Star key={j} className={`h-4 w-4 ${j < (t.rating || 5) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />)}
                     </div>
-                    <div>
-                      <p className="font-bold text-sm flex items-center gap-1">
-                        {t.name} <BadgeCheck className="h-3 w-3 text-primary" />
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">{t.city}, Nigeria</p>
+                    <p className="text-muted-foreground mb-6 italic leading-relaxed text-lg">"{t.text}"</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                        {t.name?.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm flex items-center gap-1">
+                          {t.name} <BadgeCheck className="h-3 w-3 text-primary" />
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">{t.city || 'Nigeria'}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="col-span-full py-10 text-center italic text-muted-foreground">Authentic stories from our valued customers.</div>
+              )}
             </div>
           </div>
         </section>

@@ -1,7 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
-import { Search, ShoppingBag, User, Menu, LayoutDashboard, LogOut, ChevronDown, Store } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, LayoutDashboard, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,13 +21,14 @@ import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { useCart } from '@/context/cart-context';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const { user } = useUser();
   const auth = useAuth();
-  const cartCount = 2;
+  const { cartCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

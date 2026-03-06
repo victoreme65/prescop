@@ -1,25 +1,64 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { ShieldCheck, Settings, Bell, Globe, DollarSign, Save } from 'lucide-react';
+import { ShieldCheck, Bell, Globe, DollarSign, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
+  const db = useFirestore();
+  
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'global'), [db]);
+  const { data: settings, isLoading } = useDoc(settingsRef);
+
+  const [formData, setFormData] = useState({
+    commissionRate: 10,
+    payoutThreshold: 5000,
+    autoApproveVendors: false,
+    reviewModeration: true,
+    escrowEnabled: true
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        commissionRate: settings.commissionRate || 10,
+        payoutThreshold: settings.payoutThreshold || 5000,
+        autoApproveVendors: !!settings.autoApproveVendors,
+        reviewModeration: !!settings.reviewModeration,
+        escrowEnabled: !!settings.escrowEnabled
+      });
+    }
+  }, [settings]);
+
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await setDoc(settingsRef, {
+        ...formData,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
       toast({ title: "Settings Saved", description: "Marketplace configuration updated." });
-    }, 1000);
+    } catch (err) {
+      toast({ variant: "destructive", title: "Save Failed", description: "Check permissions." });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return <div className="py-20 text-center"><Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" /></div>;
+  }
 
   return (
     <div className="space-y-10">
@@ -41,14 +80,24 @@ export default function AdminSettingsPage() {
                   <Label className="font-bold text-xs uppercase tracking-widest opacity-60">Standard Commission (%)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input defaultValue="10" className="h-14 pl-12 rounded-xl border-secondary" />
+                    <Input 
+                      type="number"
+                      value={formData.commissionRate} 
+                      onChange={(e) => setFormData({...formData, commissionRate: Number(e.target.value)})}
+                      className="h-14 pl-12 rounded-xl border-secondary" 
+                    />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <Label className="font-bold text-xs uppercase tracking-widest opacity-60">Payout Threshold (₦)</Label>
                   <div className="relative">
                     <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input defaultValue="5000" className="h-14 pl-12 rounded-xl border-secondary" />
+                    <Input 
+                      type="number"
+                      value={formData.payoutThreshold} 
+                      onChange={(e) => setFormData({...formData, payoutThreshold: Number(e.target.value)})}
+                      className="h-14 pl-12 rounded-xl border-secondary" 
+                    />
                   </div>
                 </div>
               </div>
@@ -65,21 +114,30 @@ export default function AdminSettingsPage() {
                   <p className="font-bold text-sm">Automatic Vendor Approval</p>
                   <p className="text-xs text-muted-foreground">Approve all new seller applications instantly.</p>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={formData.autoApproveVendors} 
+                  onCheckedChange={(v) => setFormData({...formData, autoApproveVendors: v})} 
+                />
               </div>
               <div className="flex items-center justify-between p-6 rounded-2xl bg-secondary/10">
                 <div>
                   <p className="font-bold text-sm">Review Moderation</p>
                   <p className="text-xs text-muted-foreground">Manually approve customer reviews before they appear.</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={formData.reviewModeration} 
+                  onCheckedChange={(v) => setFormData({...formData, reviewModeration: v})} 
+                />
               </div>
               <div className="flex items-center justify-between p-6 rounded-2xl bg-secondary/10">
                 <div>
                   <p className="font-bold text-sm">Escrow Payments</p>
                   <p className="text-xs text-muted-foreground">Hold funds until delivery is confirmed.</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={formData.escrowEnabled} 
+                  onCheckedChange={(v) => setFormData({...formData, escrowEnabled: v})} 
+                />
               </div>
             </CardContent>
           </Card>

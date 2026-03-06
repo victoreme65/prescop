@@ -1,19 +1,18 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Users, 
   Store, 
-  Package, 
   ShoppingBag, 
-  TrendingUp, 
-  AlertCircle,
   ArrowUpRight,
   Clock,
-  DollarSign
+  DollarSign,
+  Loader2
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, limit, orderBy, collectionGroup, doc } from 'firebase/firestore';
+import { collection, query, limit, collectionGroup, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
@@ -25,25 +24,21 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
 
 export default function AdminDashboardPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Guard: Ensure we only fetch if we have a valid admin session
-  // Using user?.uid as a dependency instead of the whole user object is CRITICAL
-  // to prevent redundant re-initialization of broad collectionGroup listeners.
-  
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, 'roles_admin', user.uid);
   }, [db, user?.uid]);
 
   const { data: adminRole, isLoading: isAdminChecking } = useDoc(adminRoleRef);
-  
-  // Only proceed with marketplace queries if explicit admin or root email
   const isVerifiedAdmin = adminRole || user?.email?.toLowerCase() === 'admin@prescop.com';
 
+  // 1. Fetch Core Marketplace Data
   const usersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid || !isVerifiedAdmin) return null;
     return collection(db, 'users');
@@ -69,29 +64,38 @@ export default function AdminDashboardPage() {
   const { data: orders } = useCollection(ordersQuery);
   const { data: recentSellers } = useCollection(pendingSellersQuery);
 
+  // 2. Aggregate Dynamic Stats
   const totalRevenue = orders?.reduce((acc, order) => acc + (order.totalAmount || 0), 0) || 0;
 
+  // 3. Dynamic Weekly Revenue Chart
+  const daysOfWeek = eachDayOfInterval({
+    start: startOfWeek(new Date()),
+    end: endOfWeek(new Date()),
+  });
+
+  const chartData = daysOfWeek.map(day => {
+    const dayOrders = orders?.filter(o => {
+      const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      return format(d, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+    }) || [];
+    return {
+      name: format(day, 'EEE'),
+      revenue: dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+    };
+  });
+
   const stats = [
-    { title: 'Total Users', value: users?.length || 0, icon: Users, trend: '+12%', color: 'text-blue-600' },
-    { title: 'Active Sellers', value: recentSellers?.length || 0, icon: Store, trend: '+5%', color: 'text-green-600' },
-    { title: 'Marketplace Value', value: `₦${(totalRevenue / 1000).toFixed(1)}k`, icon: DollarSign, trend: '+24%', color: 'text-primary' },
-    { title: 'Total Orders', value: orders?.length || 0, icon: ShoppingBag, trend: '+18%', color: 'text-orange-600' },
+    { title: 'Total Users', value: users?.length || 0, icon: Users, color: 'text-blue-600' },
+    { title: 'Active Sellers', value: recentSellers?.length || 0, icon: Store, color: 'text-green-600' },
+    { title: 'Marketplace Value', value: `₦${totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-primary' },
+    { title: 'Total Orders', value: orders?.length || 0, icon: ShoppingBag, color: 'text-orange-600' },
   ];
 
-  const chartData = [
-    { name: 'Mon', revenue: 45000 },
-    { name: 'Tue', revenue: 52000 },
-    { name: 'Wed', revenue: 38000 },
-    { name: 'Thu', revenue: 65000 },
-    { name: 'Fri', revenue: 48000 },
-    { name: 'Sat', revenue: 82000 },
-    { name: 'Sun', revenue: 71000 },
-  ];
-
-  if (isAdminChecking) {
+  if (isAdminChecking || !isVerifiedAdmin) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Badge variant="outline" className="animate-pulse px-6 py-2 rounded-full font-headline italic">Syncing Marketplace Data...</Badge>
+        <Loader2 className="h-12 w-12 animate-spin text-primary mr-4" />
+        <Badge variant="outline" className="px-6 py-2 rounded-full font-headline italic">Authorizing Marketplace Access...</Badge>
       </div>
     );
   }
@@ -118,7 +122,7 @@ export default function AdminDashboardPage() {
                   <stat.icon className="h-7 w-7" />
                 </div>
                 <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                  <ArrowUpRight className="h-3 w-3" /> {stat.trend}
+                  <ArrowUpRight className="h-3 w-3" /> LIVE
                 </div>
               </div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{stat.title}</p>
@@ -132,7 +136,7 @@ export default function AdminDashboardPage() {
         <Card className="lg:col-span-2 rounded-[3rem] border-none shadow-sm p-8 bg-white">
           <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between mb-8">
             <CardTitle className="font-headline text-3xl font-bold">Revenue Flow</CardTitle>
-            <Badge variant="secondary" className="rounded-full px-4 py-1 text-[10px] font-bold">WEEKLY VIEW</Badge>
+            <Badge variant="secondary" className="rounded-full px-4 py-1 text-[10px] font-bold uppercase">This Week</Badge>
           </CardHeader>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -148,7 +152,7 @@ export default function AdminDashboardPage() {
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fill: '#888', fontSize: 12 }} 
-                  tickFormatter={(v) => `₦${v/1000}k`}
+                  tickFormatter={(v) => `₦${(v/1000).toFixed(0)}k`}
                 />
                 <Tooltip 
                   cursor={{ fill: '#f8f8f8' }}
