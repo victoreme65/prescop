@@ -5,16 +5,15 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { Star, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, Sparkles, Share2, MessageSquare, Send } from 'lucide-react';
+import { Star, ShoppingCart, Heart, ShieldCheck, Truck, RefreshCw, Sparkles, Share2, MessageSquare, Send, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeProductReviews } from '@/ai/flows/summarize-product-reviews-flow';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/context/cart-context';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
+import { useFirestore, useUser, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, serverTimestamp, query, orderBy, limit, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,32 +26,43 @@ export default function ProductDetailPage() {
   const { user } = useUser();
   const db = useFirestore();
   
-  const product = MOCK_PRODUCTS.find(p => p.id === params.id) || MOCK_PRODUCTS[0];
+  // 1. Fetch Live Product Data
+  const productRef = useMemoFirebase(() => {
+    if (!db || !params.id) return null;
+    return doc(db, 'products', params.id as string);
+  }, [db, params.id]);
+
+  const { data: product, isLoading: isProductLoading } = useDoc(productRef);
   
-  const [activeImage, setActiveImage] = useState(product.images?.[0] || product.imageUrls?.[0]);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   const [reviewSummary, setReviewSummary] = useState<string | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   
-  // Real Review State
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  // Fetch Reviews from Firestore
+  // Update active image when product loads
+  useEffect(() => {
+    if (product) {
+      setActiveImage(product.images?.[0] || product.imageUrls?.[0] || null);
+    }
+  }, [product]);
+
+  // 2. Fetch Live Reviews
   const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !product.id) return null;
+    if (!db || !params.id) return null;
     return query(
-      collection(db, 'products', product.id, 'reviews'),
+      collection(db, 'products', params.id as string, 'reviews'),
       orderBy('createdAt', 'desc'),
       limit(20)
     );
-  }, [db, product.id]);
+  }, [db, params.id]);
 
   const { data: dbReviews, isLoading: isLoadingReviews } = useCollection(reviewsQuery);
 
   const handleSummarizeReviews = async () => {
-    const reviewsToSummarize = dbReviews?.length ? dbReviews : [];
-    if (!reviewsToSummarize.length) {
+    if (!product || !dbReviews?.length) {
       toast({ title: "No Reviews", description: "This product doesn't have any reviews to summarize yet." });
       return;
     }
@@ -61,7 +71,7 @@ export default function ProductDetailPage() {
     try {
       const result = await summarizeProductReviews({
         productTitle: product.title,
-        reviews: reviewsToSummarize.map(r => ({ rating: r.rating, comment: r.comment }))
+        reviews: dbReviews.map(r => ({ rating: r.rating, comment: r.comment }))
       });
       setReviewSummary(result.summary);
     } catch (error) {
@@ -78,7 +88,7 @@ export default function ProductDetailPage() {
       toast({ title: "Authentication Required", description: "Please sign in to leave a review." });
       return;
     }
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !product) return;
 
     setIsSubmittingReview(true);
     const reviewData = {
@@ -106,12 +116,40 @@ export default function ProductDetailPage() {
   };
 
   const onAddToCart = () => {
+    if (!product) return;
     addToCart(product);
     toast({
       title: "Added to Bag",
       description: `${product.title} has been added to your shopping bag.`,
     });
   };
+
+  if (isProductLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-20 flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="font-headline text-2xl italic animate-pulse">Loading beauty essentials...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-20 text-center">
+          <h1 className="font-headline text-6xl font-bold mb-4">Product Not Found</h1>
+          <p className="text-xl text-muted-foreground mb-10">This beauty essential may have vanished.</p>
+          <Button asChild className="rounded-full h-14 px-10 bg-primary"><a href="/products">Back to Marketplace</a></Button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const images = product.images || product.imageUrls || [];
 
@@ -151,7 +189,7 @@ export default function ProductDetailPage() {
               </Badge>
               <div className="flex items-center gap-2 text-base font-bold text-yellow-600 bg-yellow-50 px-4 py-1 rounded-full">
                 <Star className="h-4 w-4 fill-current" />
-                {product.rating || 4.5} <span className="text-muted-foreground font-medium text-xs">({product.numReviews || 0} Reviews)</span>
+                {product.rating || product.averageRating || 4.5} <span className="text-muted-foreground font-medium text-xs">({product.numReviews || product.reviewCount || 0} Reviews)</span>
               </div>
             </div>
 
@@ -164,7 +202,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="text-5xl md:text-7xl font-bold text-primary mb-12 tracking-tighter">
-              ₦{product.price.toLocaleString()}
+              ₦{(product.price || 0).toLocaleString()}
             </div>
 
             <p className="font-body text-xl md:text-2xl text-muted-foreground leading-relaxed mb-12 italic opacity-90">

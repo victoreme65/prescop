@@ -5,21 +5,33 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/marketplace/product-card';
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ShieldCheck, Star, BadgeCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Star, BadgeCheck, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { addDoc, collection, serverTimestamp, query, where, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
+
+  // 1. Fetch Featured Products from Live Database
+  const featuredQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(
+      collection(db, 'products'),
+      where('isFeatured', '==', true),
+      limit(4)
+    );
+  }, [db]);
+
+  const { data: featuredProducts, isLoading: isProductsLoading } = useCollection(featuredQuery);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +99,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FEATURED CATEGORIES - Mobile Horizontal Scroll */}
+        {/* FEATURED CATEGORIES */}
         <section className="py-16 md:py-24 bg-secondary/10 overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="mb-10 flex items-center justify-between">
@@ -114,7 +126,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FEATURED PRODUCTS */}
+        {/* FEATURED PRODUCTS - LIVE FEED */}
         <section className="py-16 md:py-32">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -123,9 +135,23 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-              {MOCK_PRODUCTS.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {isProductsLoading ? (
+                [...Array(4)].map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <Skeleton className="aspect-square rounded-[2.5rem] w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-6 w-1/3" />
+                  </div>
+                ))
+              ) : featuredProducts && featuredProducts.length > 0 ? (
+                featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              ) : (
+                <div className="col-span-full py-10 text-center text-muted-foreground italic">
+                  No featured products available at the moment.
+                </div>
+              )}
             </div>
           </div>
         </section>

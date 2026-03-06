@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Lock, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -23,18 +24,35 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
 
   const auth = useAuth();
+  const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || !name) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      await initiateEmailSignUp(auth, email, password);
+      // 1. Create Auth User
+      const userCredential = await initiateEmailSignUp(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Initialize "Default Database" - Provision the User Profile
+      // This document serves as the root for all private user data
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        id: user.uid,
+        firstName: name.split(' ')[0] || '',
+        lastName: name.split(' ').slice(1).join(' ') || '',
+        email: email,
+        role: 'customer',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
       toast({ title: "Account Created!", description: "Welcome to the Prescop beauty circle." });
       router.push('/');
     } catch (err: any) {
@@ -83,7 +101,7 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-bold text-xs uppercase tracking-widest opacity-60">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="name" 
                     placeholder="Amaka Obi" 
