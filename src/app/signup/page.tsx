@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -13,12 +14,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth, useFirestore } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
-import { User as UserIcon, Mail, Lock, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, Phone, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,18 +38,16 @@ export default function SignupPage() {
     setError(null);
 
     try {
-      // 1. Create Auth User
       const userCredential = await initiateEmailSignUp(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Initialize "Default Database" - Provision the User Profile
-      // This document serves as the root for all private user data
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         id: user.uid,
         firstName: name.split(' ')[0] || '',
         lastName: name.split(' ').slice(1).join(' ') || '',
         email: email,
+        phone: phone,
         role: 'customer',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -58,21 +58,10 @@ export default function SignupPage() {
     } catch (err: any) {
       console.error(err);
       let message = "An unexpected error occurred. Please try again.";
-      
-      if (err.code === 'auth/email-already-in-use') {
-        message = "An account with this email already exists.";
-      } else if (err.code === 'auth/weak-password') {
-        message = "Password is too weak. Please use at least 6 characters.";
-      } else if (err.code === 'auth/invalid-email') {
-        message = "Invalid email address format.";
-      }
-
+      if (err.code === 'auth/email-already-in-use') message = "An account with this email already exists.";
+      else if (err.code === 'auth/weak-password') message = "Password is too weak.";
       setError(message);
-      toast({ 
-        variant: "destructive", 
-        title: "Signup Failed", 
-        description: message 
-      });
+      toast({ variant: "destructive", title: "Signup Failed", description: message });
     } finally {
       setIsLoading(false);
     }
@@ -102,59 +91,32 @@ export default function SignupPage() {
                 <Label htmlFor="name" className="font-bold text-xs uppercase tracking-widest opacity-60">Full Name</Label>
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="name" 
-                    placeholder="Amaka Obi" 
-                    className="pl-12 h-14 rounded-xl border-secondary"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required 
-                    disabled={isLoading}
-                  />
+                  <Input id="name" placeholder="Amaka Obi" className="pl-12 h-14 rounded-xl" value={name} onChange={(e) => setName(e.target.value)} required disabled={isLoading} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-bold text-xs uppercase tracking-widest opacity-60">Email Address</Label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="amaka@example.com" 
-                    className="pl-12 h-14 rounded-xl border-secondary"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                    disabled={isLoading}
-                  />
+                  <Input id="email" type="email" placeholder="amaka@example.com" className="pl-12 h-14 rounded-xl" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="font-bold text-xs uppercase tracking-widest opacity-60">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="phone" placeholder="+234..." className="pl-12 h-14 rounded-xl" value={phone} onChange={(e) => setPhone(e.target.value)} required disabled={isLoading} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="font-bold text-xs uppercase tracking-widest opacity-60">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="••••••••" 
-                    className="pl-12 h-14 rounded-xl border-secondary"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                    disabled={isLoading}
-                  />
+                  <Input id="password" type="password" placeholder="••••••••" className="pl-12 h-14 rounded-xl" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} />
                 </div>
               </div>
-              <Button 
-                type="submit" 
-                disabled={isLoading}
-                className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3"
-              >
-                {isLoading ? (
-                  <>Creating Account <Loader2 className="h-5 w-5 animate-spin" /></>
-                ) : (
-                  <>Create Account <ArrowRight className="h-5 w-5" /></>
-                )}
+              <Button type="submit" disabled={isLoading} className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-3">
+                {isLoading ? <>Creating Account <Loader2 className="h-5 w-5 animate-spin" /></> : <>Create Account <ArrowRight className="h-5 w-5" /></>}
               </Button>
             </form>
             <div className="mt-10 text-center">

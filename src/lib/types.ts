@@ -1,3 +1,4 @@
+
 export type Role = 'customer' | 'seller' | 'admin';
 
 export interface User {
@@ -5,9 +6,23 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   role: Role;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface SellerProfile {
+  id: string;
+  userId: string;
+  businessName: string;
+  phone: string;
+  country: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
 }
 
 export interface Product {
@@ -17,8 +32,7 @@ export interface Product {
   title: string;
   description: string;
   price: number;
-  categoryId: string;
-  category?: string;
+  category: string;
   imageUrls: string[];
   images?: string[]; 
   stock: number;
@@ -56,8 +70,9 @@ export interface Order {
   customerEmail: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed';
+  deliveryStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: string;
   createdAt: any;
 }
 
@@ -77,4 +92,12 @@ export interface NewsletterSubscription {
   subscriptionDate: any;
   isActive: boolean;
   source?: string;
+}
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: any;
 }
