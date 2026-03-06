@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -37,7 +36,7 @@ export default function AdminLoginPage() {
     try {
       // 1. Handle the specific "admin" username mapping
       const targetEmail = email === ADMIN_USER ? ADMIN_EMAIL : email;
-      const isRootAdmin = email === ADMIN_USER && password === ADMIN_PASS;
+      const isRootAdmin = (email === ADMIN_USER || email === ADMIN_EMAIL) && password === ADMIN_PASS;
 
       let user;
       try {
@@ -55,7 +54,7 @@ export default function AdminLoginPage() {
 
       // 3. Ensure the admin role record exists for the root admin in the database
       if (isRootAdmin && user) {
-        // We use merge: true to avoid overwriting existing data if it's already there
+        // Essential: Write this BEFORE redirecting to ensure security rules pass on the next page
         await setDoc(doc(db, 'roles_admin', user.uid), {
           id: user.uid,
           email: ADMIN_EMAIL,

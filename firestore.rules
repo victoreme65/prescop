@@ -5,9 +5,7 @@ service cloud.firestore {
 
     /**
      * PRESCOP SECURITY RULES
-     *
-     * CORE PHILOSOPHY:
-     * This ruleset implements a hybrid security model designed for a multi-vendor marketplace.
+     * hybrid security model for a multi-vendor marketplace.
      */
 
     // --- HELPER FUNCTIONS ---
@@ -19,7 +17,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
-        request.auth.token.email == 'admin@prescop.com'
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'admin@prescop.com')
       );
     }
 
@@ -101,15 +99,15 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow get, list: if true;
-      allow create: if isIncomingOwner('sellerId');
-      allow update: if isResourceOwner('sellerId') && request.resource.data.sellerId == resource.data.sellerId;
+      allow create: if isIncomingOwner('sellerId') || isAdmin();
+      allow update: if (isResourceOwner('sellerId') && request.resource.data.sellerId == resource.data.sellerId) || isAdmin();
       allow delete: if isResourceOwner('sellerId') || isAdmin();
 
       match /reviews/{reviewId} {
         allow get, list: if true;
-        allow create: if isIncomingOwner('customerId');
-        allow update: if isResourceOwner('customerId') && request.resource.data.customerId == resource.data.customerId;
-        allow delete: if isResourceOwner('customerId') || isAdmin();
+        allow create: if isSignedIn();
+        allow update: if isResourceOwner('userId') || isAdmin();
+        allow delete: if isResourceOwner('userId') || isAdmin();
       }
     }
 

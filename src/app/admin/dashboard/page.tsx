@@ -12,8 +12,8 @@ import {
   Clock,
   DollarSign
 } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, limit, orderBy, collectionGroup } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, limit, orderBy, collectionGroup, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
@@ -30,28 +30,39 @@ export default function AdminDashboardPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Guard all queries until db and auth are fully ready.
+  // Guard: Ensure we only fetch if we have a valid admin session
   // Using user?.uid as a dependency instead of the whole user object is CRITICAL
   // to prevent redundant re-initialization of broad collectionGroup listeners.
-  const usersQuery = useMemoFirebase(() => {
+  
+  const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    return collection(db, 'users');
+    return doc(db, 'roles_admin', user.uid);
   }, [db, user?.uid]);
+
+  const { data: adminRole, isLoading: isAdminChecking } = useDoc(adminRoleRef);
+  
+  // Only proceed with marketplace queries if explicit admin or root email
+  const isVerifiedAdmin = adminRole || user?.email?.toLowerCase() === 'admin@prescop.com';
+
+  const usersQuery = useMemoFirebase(() => {
+    if (!db || !user?.uid || !isVerifiedAdmin) return null;
+    return collection(db, 'users');
+  }, [db, user?.uid, isVerifiedAdmin]);
 
   const productsQuery = useMemoFirebase(() => {
-    if (!db || !user?.uid) return null;
+    if (!db || !user?.uid || !isVerifiedAdmin) return null;
     return collection(db, 'products');
-  }, [db, user?.uid]);
+  }, [db, user?.uid, isVerifiedAdmin]);
 
   const ordersQuery = useMemoFirebase(() => {
-    if (!db || !user?.uid) return null;
+    if (!db || !user?.uid || !isVerifiedAdmin) return null;
     return collectionGroup(db, 'orders');
-  }, [db, user?.uid]);
+  }, [db, user?.uid, isVerifiedAdmin]);
 
   const pendingSellersQuery = useMemoFirebase(() => {
-    if (!db || !user?.uid) return null;
+    if (!db || !user?.uid || !isVerifiedAdmin) return null;
     return query(collectionGroup(db, 'sellerProfiles'), limit(5));
-  }, [db, user?.uid]);
+  }, [db, user?.uid, isVerifiedAdmin]);
 
   const { data: users } = useCollection(usersQuery);
   const { data: products } = useCollection(productsQuery);
@@ -76,6 +87,14 @@ export default function AdminDashboardPage() {
     { name: 'Sat', revenue: 82000 },
     { name: 'Sun', revenue: 71000 },
   ];
+
+  if (isAdminChecking) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <Badge variant="outline" className="animate-pulse px-6 py-2 rounded-full font-headline italic">Syncing Marketplace Data...</Badge>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pb-20 font-body">
