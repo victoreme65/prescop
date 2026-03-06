@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -38,34 +39,39 @@ export default function AdminLoginPage() {
       const targetEmail = email === ADMIN_USER ? ADMIN_EMAIL : email;
       const isRootAdmin = email === ADMIN_USER && password === ADMIN_PASS;
 
+      let user;
       try {
-        await initiateEmailSignIn(auth, targetEmail, password);
+        const userCred = await initiateEmailSignIn(auth, targetEmail, password);
+        user = userCred.user;
       } catch (signInErr: any) {
         // 2. Auto-provision the root admin if credentials match but user doesn't exist yet
         if (isRootAdmin && (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential')) {
           const userCred = await initiateEmailSignUp(auth, ADMIN_EMAIL, ADMIN_PASS);
-          const user = userCred.user;
-          
-          // Create the admin role record in Firestore
-          await setDoc(doc(db, 'roles_admin', user.uid), {
-            id: user.uid,
-            email: ADMIN_EMAIL,
-            role: 'admin',
-            createdAt: serverTimestamp()
-          });
-
-          // Also create user profile
-          await setDoc(doc(db, 'users', user.uid), {
-            id: user.uid,
-            email: ADMIN_EMAIL,
-            firstName: 'System',
-            lastName: 'Administrator',
-            role: 'admin',
-            createdAt: serverTimestamp()
-          });
+          user = userCred.user;
         } else {
           throw signInErr;
         }
+      }
+
+      // 3. Ensure the admin role record exists for the root admin in the database
+      if (isRootAdmin && user) {
+        // We use merge: true to avoid overwriting existing data if it's already there
+        await setDoc(doc(db, 'roles_admin', user.uid), {
+          id: user.uid,
+          email: ADMIN_EMAIL,
+          role: 'admin',
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        // Ensure the user profile is also marked as admin
+        await setDoc(doc(db, 'users', user.uid), {
+          id: user.uid,
+          email: ADMIN_EMAIL,
+          firstName: 'System',
+          lastName: 'Administrator',
+          role: 'admin',
+          updatedAt: serverTimestamp()
+        }, { merge: true });
       }
       
       toast({ title: "Identity Verified", description: "Welcome to the Command Center." });

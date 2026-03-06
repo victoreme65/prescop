@@ -8,16 +8,6 @@ service cloud.firestore {
      *
      * CORE PHILOSOPHY:
      * This ruleset implements a hybrid security model designed for a multi-vendor marketplace.
-     * 1. Private User Data: Enforces a strict ownership model using a hierarchical /users/{userId} path.
-     * 2. Public Marketplace: Allows public browsing of categories and products to support SEO and anonymous shopping.
-     * 3. Seller Autonomy: Sellers manage their own listings via denormalized ownership fields (sellerId) to avoid recursive lookups.
-     * 4. Admin Control: A dedicated /roles_admin collection identifies global administrators who bypass standard restrictions.
-     *
-     * DATA STRUCTURE:
-     * - /users/{userId}: Private profiles, orders, and seller-specific metadata.
-     * - /products: Publicly readable listings with sellerId denormalized for write authorization.
-     * - /categories: Publicly readable, admin-managed organization.
-     * - /testimonials & /newsletterSubscriptions: Publicly writeable for lead generation, admin-moderated.
      */
 
     // --- HELPER FUNCTIONS ---
@@ -27,7 +17,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
+        request.auth.token.email == 'admin@prescop.com'
+      );
     }
 
     function isOwner(userId) {
