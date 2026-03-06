@@ -2,24 +2,23 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore'
+
+// Singleton cache for services
+let firestoreInstance: Firestore | null = null;
+let authInstance: Auth | null = null;
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
-    // During SSR/Build, we return a safe structure but avoid calling initializeApp() 
-    // without arguments to prevent the 'app/no-options' crash.
-    // We only initialize if a hardcoded config exists, prioritizing it for the build.
     let app: FirebaseApp;
     if (getApps().length) {
       app = getApp();
     } else {
-      // In SSR, we only attempt if we have a config, otherwise we return placeholders to avoid build bails.
       if (firebaseConfig.apiKey) {
         app = initializeApp(firebaseConfig);
       } else {
-        // Return null-ish placeholders for server-side stability
         return {
           firebaseApp: null as any,
           auth: null as any,
@@ -33,10 +32,8 @@ export function initializeFirebase() {
   if (!getApps().length) {
     let firebaseApp;
     try {
-      // Attempt automatic initialization
-      firebaseApp = initializeApp();
+      firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
-      // Fallback to hardcoded config
       firebaseApp = initializeApp(firebaseConfig);
     }
     return getSdks(firebaseApp);
@@ -47,10 +44,15 @@ export function initializeFirebase() {
 
 export function getSdks(firebaseApp: FirebaseApp) {
   if (!firebaseApp) return { firebaseApp: null as any, auth: null as any, firestore: null as any };
+  
+  // Ensure singletons for services to prevent internal Firestore sync errors
+  if (!authInstance) authInstance = getAuth(firebaseApp);
+  if (!firestoreInstance) firestoreInstance = getFirestore(firebaseApp);
+
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    auth: authInstance,
+    firestore: firestoreInstance
   };
 }
 

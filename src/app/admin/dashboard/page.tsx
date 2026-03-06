@@ -30,14 +30,31 @@ export default function AdminDashboardPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Guarded Stats Counts
-  const { data: users } = useCollection(useMemoFirebase(() => collection(db, 'users'), [db]));
-  const { data: products } = useCollection(useMemoFirebase(() => collection(db, 'products'), [db]));
-  const { data: orders } = useCollection(useMemoFirebase(() => collectionGroup(db, 'orders'), [db]));
+  // Stable memoized queries to prevent Firestore "Unexpected state (ID: ca9)" errors
+  const usersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'users');
+  }, [db]);
 
-  const pendingSellersQuery = useMemoFirebase(() => 
-    query(collectionGroup(db, 'sellerProfiles'), limit(5)), [db]
-  );
+  const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'products');
+  }, [db]);
+
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    // Guarded to prevent broad collectionGroup search without indexes or auth readiness
+    return collectionGroup(db, 'orders');
+  }, [db]);
+
+  const pendingSellersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collectionGroup(db, 'sellerProfiles'), limit(5));
+  }, [db]);
+
+  const { data: users } = useCollection(usersQuery);
+  const { data: products } = useCollection(productsQuery);
+  const { data: orders } = useCollection(ordersQuery);
   const { data: recentSellers } = useCollection(pendingSellersQuery);
 
   const totalRevenue = orders?.reduce((acc, order) => acc + (order.totalAmount || 0), 0) || 0;
@@ -132,7 +149,7 @@ export default function AdminDashboardPage() {
               recentSellers.map((seller: any) => (
                 <div key={seller.id} className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/30 border border-secondary/50 group hover:bg-primary/5 transition-colors">
                   <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center font-bold text-primary shadow-sm">
-                    {seller.businessName.charAt(0)}
+                    {seller.businessName?.charAt(0) || 'B'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">{seller.businessName}</p>
