@@ -26,7 +26,7 @@ export function initializeFirebase() {
     };
   }
 
-  // Client-side singleton pattern
+  // Client-side singleton pattern: Ensure only one instance of the SDK services exists per session.
   if (!cachedApp) {
     const apps = getApps();
     cachedApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
