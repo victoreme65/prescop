@@ -1,184 +1,156 @@
-
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Navbar } from '@/components/layout/navbar';
-import { Footer } from '@/components/layout/footer';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { 
+  Users, 
+  Store, 
+  Package, 
+  ShoppingBag, 
+  TrendingUp, 
+  AlertCircle,
+  ArrowUpRight,
+  Clock
+} from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, limit, orderBy, collectionGroup } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShieldCheck, Users, Store, ShoppingBag, Check, X, AlertCircle } from 'lucide-react';
-import { collectionGroup, query, where, doc, updateDoc, collection, orderBy } from 'firebase/firestore';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from 'recharts';
 
-export default function AdminDashboard() {
-  const { user, isUserLoading } = useUser();
+export default function AdminDashboardPage() {
   const db = useFirestore();
-  const { toast } = useToast();
-  const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Security Check: Verify Admin Status via Firestore
-  useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      // Simple check (ideally this matches the roles_admin collection)
-      if (user.email === 'admin@prescop.com') {
-        setIsAdmin(true);
-      }
-    }
-  }, [user, isUserLoading, router]);
+  // Fetch Stats Counts
+  const { data: users } = useCollection(useMemoFirebase(() => collection(db, 'users'), [db]));
+  const { data: products } = useCollection(useMemoFirebase(() => collection(db, 'products'), [db]));
+  const { data: orders } = useCollection(useMemoFirebase(() => collectionGroup(db, 'orders'), [db]));
 
-  // Fetch Pending Seller Applications (using collectionGroup for ease)
-  const pendingSellersQuery = useMemoFirebase(() => {
-    // CRITICAL: Guard query to prevent permission error for non-admins
-    if (!db || !isAdmin) return null;
-    return query(collectionGroup(db, 'sellerProfiles'), where('status', '==', 'pending'));
-  }, [db, isAdmin]);
-  const { data: pendingSellers } = useCollection(pendingSellersQuery);
+  const pendingSellersQuery = useMemoFirebase(() => 
+    query(collectionGroup(db, 'sellerProfiles'), limit(5)), [db]
+  );
+  const { data: recentSellers } = useCollection(pendingSellersQuery);
 
-  // Fetch All Orders
-  const allOrdersQuery = useMemoFirebase(() => {
-    // CRITICAL: Guard query to prevent permission error for non-admins
-    if (!db || !isAdmin) return null;
-    return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
-  }, [db, isAdmin]);
-  const { data: allOrders } = useCollection(allOrdersQuery);
+  const stats = [
+    { title: 'Total Users', value: users?.length || 0, icon: Users, trend: '+12%', color: 'text-blue-600' },
+    { title: 'Active Sellers', value: recentSellers?.length || 0, icon: Store, trend: '+5%', color: 'text-green-600' },
+    { title: 'Total Products', value: products?.length || 0, icon: Package, trend: '+18%', color: 'text-orange-600' },
+    { title: 'Total Orders', value: orders?.length || 0, icon: ShoppingBag, trend: '+24%', color: 'text-primary' },
+  ];
 
-  const handleApproveSeller = (userId: string, profileId: string) => {
-    const profileRef = doc(db, 'users', userId, 'sellerProfiles', profileId);
-    updateDocumentNonBlocking(profileRef, { status: 'approved' });
-    
-    // Also upgrade user role to 'seller'
-    const userRef = doc(db, 'users', userId);
-    updateDocumentNonBlocking(userRef, { role: 'seller' });
-
-    toast({ title: "Seller Approved", description: "The user has been upgraded to vendor status." });
-  };
-
-  const handleRejectSeller = (userId: string, profileId: string) => {
-    const profileRef = doc(db, 'users', userId, 'sellerProfiles', profileId);
-    updateDocumentNonBlocking(profileRef, { status: 'rejected' });
-    toast({ variant: "destructive", title: "Seller Rejected", description: "The application has been declined." });
-  };
-
-  if (isUserLoading || (!isAdmin && user)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <ShieldCheck className="h-12 w-12 text-primary animate-pulse mx-auto" />
-          <p className="font-headline text-2xl italic">Authenticating Administrator...</p>
-        </div>
-      </div>
-    );
-  }
+  const chartData = [
+    { name: 'Mon', revenue: 45000 },
+    { name: 'Tue', revenue: 52000 },
+    { name: 'Wed', revenue: 38000 },
+    { name: 'Thu', revenue: 65000 },
+    { name: 'Fri', revenue: 48000 },
+    { name: 'Sat', revenue: 82000 },
+    { name: 'Sun', revenue: 71000 },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/20">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-12 md:py-24">
-        <div className="max-w-7xl mx-auto space-y-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight">Admin <span className="text-primary italic">Control</span></h1>
-              <p className="text-muted-foreground text-lg">Manage the Prescop beauty ecosystem.</p>
-            </div>
-            <div className="flex gap-4">
-               <Card className="px-6 py-3 rounded-full border-primary/20 bg-white shadow-sm flex items-center gap-3">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-ping" />
-                  <span className="text-xs font-bold uppercase tracking-widest">System Online</span>
-               </Card>
-            </div>
-          </div>
-
-          <Tabs defaultValue="sellers" className="w-full">
-            <TabsList className="bg-white p-2 rounded-full h-auto gap-2 shadow-sm border border-secondary mb-12">
-              <TabsTrigger value="sellers" className="rounded-full px-8 py-3 font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Seller Approval</TabsTrigger>
-              <TabsTrigger value="orders" className="rounded-full px-8 py-3 font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Marketplace Sales</TabsTrigger>
-              <TabsTrigger value="users" className="rounded-full px-8 py-3 font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">User Management</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="sellers">
-              <div className="grid grid-cols-1 gap-6">
-                {pendingSellers && pendingSellers.length > 0 ? (
-                  pendingSellers.map((seller: any) => (
-                    <Card key={seller.id} className="rounded-[2.5rem] border-none shadow-sm overflow-hidden">
-                      <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
-                          <div className="h-16 w-16 rounded-2xl bg-secondary/50 flex items-center justify-center">
-                            <Store className="h-8 w-8 text-primary opacity-40" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">New Vendor Application</p>
-                            <h4 className="font-bold text-xl">{seller.businessName}</h4>
-                            <p className="text-sm italic text-muted-foreground">{seller.fullName} • {seller.phone}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Button 
-                            onClick={() => handleApproveSeller(seller.userId, seller.id)}
-                            className="rounded-full h-12 px-8 bg-green-600 hover:bg-green-700 font-bold gap-2"
-                          >
-                            <Check className="h-4 w-4" /> Approve
-                          </Button>
-                          <Button 
-                            onClick={() => handleRejectSeller(seller.userId, seller.id)}
-                            variant="outline" 
-                            className="rounded-full h-12 px-8 border-destructive/20 text-destructive hover:bg-destructive/5 font-bold gap-2"
-                          >
-                            <X className="h-4 w-4" /> Reject
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="p-20 text-center bg-white rounded-[3rem] border border-dashed">
-                    <Check className="h-12 w-12 mx-auto mb-4 text-green-500 opacity-20" />
-                    <p className="text-muted-foreground font-headline text-2xl italic">No pending vendor applications.</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="orders">
-               <div className="grid grid-cols-1 gap-4">
-                  {allOrders?.map((order: any) => (
-                     <Card key={order.id} className="rounded-[2rem] border-none shadow-sm p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-6">
-                           <div className="h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center">
-                              <ShoppingBag className="h-6 w-6 text-primary opacity-60" />
-                           </div>
-                           <div>
-                              <p className="font-bold">₦{order.totalAmount.toLocaleString()}</p>
-                              <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">{order.customerId}</p>
-                           </div>
-                        </div>
-                        <Badge className={`rounded-full px-4 py-1 font-bold text-[10px] ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                           {order.paymentStatus.toUpperCase()}
-                        </Badge>
-                     </Card>
-                  ))}
-               </div>
-            </TabsContent>
-
-            <TabsContent value="users">
-                <div className="p-20 text-center bg-white rounded-[4rem] border border-dashed">
-                  <Users className="h-16 w-16 mx-auto mb-6 text-primary opacity-10" />
-                  <p className="text-2xl font-headline italic text-muted-foreground">User moderation system active.</p>
-                </div>
-            </TabsContent>
-          </Tabs>
+    <div className="space-y-10 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight">Marketplace <span className="text-primary italic">Overview</span></h1>
+          <p className="text-muted-foreground text-lg">Live system health and commercial performance.</p>
         </div>
-      </main>
-      <Footer />
+        <Badge variant="outline" className="h-12 rounded-full px-6 border-primary/20 bg-white shadow-sm flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-green-500 animate-ping" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Real-time Sync Active</span>
+        </Badge>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+        {stats.map((stat, i) => (
+          <Card key={i} className="rounded-[2.5rem] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden bg-white">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center bg-secondary/50", stat.color)}>
+                  <stat.icon className="h-7 w-7" />
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                  <ArrowUpRight className="h-3 w-3" /> {stat.trend}
+                </div>
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{stat.title}</p>
+              <h3 className="text-4xl font-bold tracking-tighter">{stat.value.toLocaleString()}</h3>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Analytics Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 rounded-[3rem] border-none shadow-sm p-8 bg-white">
+          <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between mb-8">
+            <CardTitle className="font-headline text-3xl font-bold">Revenue Trends</CardTitle>
+            <Badge variant="secondary" className="rounded-full px-4 py-1 text-[10px] font-bold">WEEKLY VIEW</Badge>
+          </CardHeader>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#888', fontSize: 12, fontWeight: 'bold' }} 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#888', fontSize: 12 }} 
+                  tickFormatter={(v) => `₦${v/1000}k`}
+                />
+                <Tooltip 
+                  cursor={{ fill: '#f8f8f8' }}
+                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="rounded-[3rem] border-none shadow-sm p-8 bg-white">
+          <CardHeader className="px-0 pt-0 mb-8">
+            <CardTitle className="font-headline text-3xl font-bold">Pending Actions</CardTitle>
+          </CardHeader>
+          <div className="space-y-6">
+            {recentSellers && recentSellers.length > 0 ? (
+              recentSellers.map((seller: any) => (
+                <div key={seller.id} className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/30 border border-secondary/50">
+                  <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center font-bold text-primary shadow-sm">
+                    {seller.businessName.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm truncate">{seller.businessName}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">New Application</p>
+                  </div>
+                  <Badge className="bg-yellow-100 text-yellow-700 border-none text-[8px] font-bold">REVIEW</Badge>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-20 opacity-20">
+                <Clock className="h-12 w-12 mx-auto mb-4" />
+                <p className="text-sm font-bold uppercase tracking-widest">All caught up</p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
